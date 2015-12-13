@@ -10,34 +10,44 @@
 
 <body>
 
+<h2>Introduction</h2>
+<h3>Problem</h3>
 <p>Iterators that conform to the requirements of the C++ standard library are 
-tedious to write and difficult to write correctly. Conforming iterators are 
-tedious to write because although they require only a small number of core 
-functions, they also require a larger number of subsidiary functions and other 
-boilerplate. Conforming iterators are difficult to write correctly because each 
-iterator category has a subtly differing set of function and other requirements, 
-and it is all too easy to forget subsidiary functions or other boilerplate; such 
-errors are often silent, sometime for years.</p>
-<p>It has been recognized since the earliest days of C++98 that it should be 
-possible to write a single template class that provides a fully conforming 
-iterator given only a few template arguments and a small number of core 
-functions. The Boost <code>iterator_facade</code> class template does something 
-very close to that and has been in wide use since
-<span style="background-color: #FFFF00">200x</span>.
-<span style="background-color: #FFFF00">Nxxxx</span> was an attempt to add an 
-iterator facade template to the standard library. It failed despite heroic 
-efforts because the core language and standard library at that time were not 
-rich enough to express the full set of requirements, let alone in a way that 
-would avoid breaking existing code.</p>
-<p>This paper proposes an iterator facade class template for the standard 
-library. The C++11/14/17 core language with the addition of Concepts plus the 
-standard library Ranges proposals already before the committee allow 
-straightforward specification of an iterator facade class template. Only routine 
-effort to specify, implement, understand, and use the proposed class is 
-required.</p>
-<p>The proposal breaks no existing code, requires only the changes to the 
-standard already in the Concepts and Ranges proposals, and has an open-source 
-implementation publicly available.</p>
+tedious to write and difficult to write correctly. They are tedious to write 
+because although they only require a small number of core functions, they also 
+require a larger number of subsidiary functions and other boilerplate. 
+Conforming iterators are difficult to write correctly because each iterator 
+category has a subtly differing set of function and other requirements, so it is 
+all too easy to forget subsidiary functions or other boilerplate.</p>
+<h3>Solution</h3>
+<p>A class template with a small number of core functions can generate the 
+facade (i.e. public interface and private implementation) for a fully conforming 
+iterator including all boilerplate. <span style="background-color: #FFFF00">
+Boost </span><code><span style="background-color: #FFFF00">iterator_facade</span></code> 
+has does just that and has been in wide use since 2001. It has proven to make it 
+easier to write conforming iterators and less error prone than hand-coded 
+iterators. The generated iterator conforms to an extended set of requirements 
+based on the requirements set out in C++98.
+<span style="background-color: #FFFF00">Other libraries</span> have also 
+provided iterator facade classes inspired by the Boost library.</p>
+<h3>Proposal</h3>
+<p>This paper proposes a modern iterator facade class template for the standard 
+library. C++11/14/17 with <span style="background-color: #FFFF00">concepts</span> 
+and <span style="background-color: #FFFF00">ranges</span> allows straightforward 
+iterator facade specification and implementation.</p>
+<p>The proposal will break no existing code and break no existing ABI. A public 
+open-source <span style="background-color: #FFFF00">implementation</span> is 
+available on GitHub.</p>
+<p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. 
+Otherwise, the proposal is suitable for the Ranges TS. No other core language or 
+library changes are required.</p>
+<h3>History</h3>
+<p>A 2004 <span style="background-color: #FFFF00">proposal</span> based on Boost
+<code>iterator_facade</code> failed when an
+<span style="background-color: #FFFF00">iterator update proposal</span> it 
+depended upon failed because C++03 without concepts was not rich enough to 
+express the necessary iterator requirements.</p>
+<p>&nbsp;</p>
 
 </body>
 
