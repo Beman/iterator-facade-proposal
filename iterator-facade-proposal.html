@@ -1,0 +1,34 @@
+<h2 id="table-of-contents">Table of Contents</h2>
+<h2 id="introduction">Introduction</h2>
+<h3 id="problem">Problem</h3>
+<p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, so it is all too easy to subsidiary functions or other boilerplate wrong.</p>
+<h3 id="solution">Solution</h3>
+<p>A class template that is given a few implementation functions can generate the facade (i.e. public interface and private implementation) for a fully conforming iterator, including all boilerplate. Boost <code>iterator_facade</code> pioneered this approach and has been in wide use since 2001<sup>[<a href="#1">1</a>]</sup>. It eases writing conforming iterators and has proven less error prone than hand-coded iterators. The generated iterator conforms to an extended set of requirements based on the C++98 iterator requirements. Others, such as Chandler Carruth's LLVM <code>iterator_facade_base</code><sup>[<a href="#2">2</a>]</sup>, have provided similar classes inspired by the Boost library.</p>
+<h3 id="proposal">Proposal</h3>
+<p>This paper proposes a modern iterator facade class template for the standard library. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation. The proposal will break no existing code and break no existing ABI. A public open-source implementation and test suite is available on GitHub<sup>[<a href="#5">5</a>]</sup>.</p>
+<p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.</p>
+<h3 id="history">History</h3>
+<p>A 2004 proposal<sup>[<a href="#6">6</a>]</sup> based on Boost iterator_facade failed because it depended an iterator update proposal<sup>[<a href="#7">7</a>]</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.</p>
+<h2 id="motivation-and-scope">Motivation and Scope</h2>
+<p><strong>Why is this important?</strong></p>
+<ul>
+<li>It eases the task of creating standard library conforming iterators.</li>
+</ul>
+<p><em>What kinds of problems does it address? What is the intended user community?</em></p>
+<p><em>What level of programmers (novice, experienced, expert) is it intended to support?</em> All levels.<br />
+<em>What existing practice is it based on? How widespread is its use? How long has it been in use? Is there a reference implementation and test suite available for inspection?</em></p>
+<h2 id="examples">Examples</h2>
+<h2 id="design-decisions">Design Decisions</h2>
+<h2 id="technical-specifications">Technical Specifications</h2>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<h2 id="references">References</h2>
+<p>[<a name="1">1</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="https://www.boost.org/doc/libs/1_59_0/libs/iterator/doc/iterator_facade.html">Boost Iterator Facade</a>, 2003.</p>
+<p>[<a name="2">2</a>] Chandler Carruth, <a href="https://github.com/llvm-mirror/llvm/blob/master/include/llvm/ADT/iterator.h">LLVM <code>iterator_facade_base</code> iterator.h</a>, 2014.</p>
+<p>[<a name="3">3</a>] Andrew Sutton, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4553.pdf">N4553, Working Draft,<br />
+C++ extensions for Concepts</a>, 2015.</p>
+<p>[<a name="4">4</a>] Eric Niebler, Casey Carter, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf">N4650, Working Draft,<br />
+C++ Extensions for Ranges</a>, 2015.</p>
+<p>[<a name="5">5</a>] Eric Niebler, Casey Carter, <a href="https://github.com/ericniebler/range-v3">Experimental range library for C++11/14/17</a>, 2015.</p>
+<p>[<a name="6">6</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html">N1641, Iterator Facade and Adaptor</a>, 2004.</p>
+<p>[<a name="7">7</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html">N1640, New Iterator Concepts</a>, 2004.</p>
+<hr />
