@@ -1,6 +1,27 @@
-# Library Iterator Facade Class
+<table>
+<tr>
+  <td align="left">Doc. no.:</td>
+  <td align="left">DnnnnR0</td>
+</tr>
+<tr>
+  <td align="left">Date:</td>
+  <td align="left">2015-12-15</td>
+</tr>
+<tr>
+  <td align="left">Project:</td>
+  <td align="left">To be decided</td>
+</tr>
+<tr>
+  <td align="left" valign="top">Reply to:</td>
+  <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
+    Eric Niebler &lt;....&gt;</br>
+	Casey Carter &lt;....&gt;</td>
+</tr>
+</table>
 
->**Summary:** Proposes a library class template useful for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts Technical Specification (TS) and Ranges TS working paper. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.
+# Iterator Facade Library Proposal
+
+>**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.
 
 ## Table of Contents
 
@@ -38,7 +59,11 @@ This ensures that the proposal represents existing practice in widespread use.
 
 #### Base the interface on features in the Concepts TS and the Ranges TS working paper
 
-This eliminates the difficulties with specification of requirements that bedeviled the 2004 proposals. It ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake. The proposal is arguably an excellent poster child for the benefits of concepts.
+This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows an interface specification that ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake.
+
+#### Use Cursor mixins to supply implementation details
+
+Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.
 
 ## Technical Specifications
 

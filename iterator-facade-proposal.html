@@ -9,9 +9,29 @@
   <link rel="stylesheet" href="styles.css" type="text/css" />
 </head>
 <body>
-<h1 id="library-iterator-facade-class">Library Iterator Facade Class</h1>
+<table>
+<tr>
+  <td align="left">Doc. no.:</td>
+  <td align="left">DnnnnR0</td>
+</tr>
+<tr>
+  <td align="left">Date:</td>
+  <td align="left">2015-12-15</td>
+</tr>
+<tr>
+  <td align="left">Project:</td>
+  <td align="left">To be decided</td>
+</tr>
+<tr>
+  <td align="left" valign="top">Reply to:</td>
+  <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
+    Eric Niebler &lt;....&gt;</br>
+    Casey Carter &lt;....&gt;</td>
+</tr>
+</table>
+<h1 id="iterator-facade-library-proposal">Iterator Facade Library Proposal</h1>
 <blockquote>
-<p><strong>Summary:</strong> Proposes a library class template useful for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts Technical Specification (TS) and Ranges TS working paper. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.</p>
+<p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.</p>
 </blockquote>
 <h2 id="table-of-contents">Table of Contents</h2>
 <p><em>TBS</em></p>
@@ -26,17 +46,18 @@
 <h3 id="history">History</h3>
 <p>A 2004 proposal<sup>[<a href="#6">6</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended an iterator update proposal<sup>[<a href="#7">7</a>]</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.</p>
 <h2 id="examples">Examples</h2>
+<p><em>TBS</em></p>
 <h2 id="design-decisions">Design Decisions</h2>
-<h4 id="use-boost-iterator_facade-as-a-role-model.">Use Boost <code>iterator_facade</code> as a role model.**</h4>
-<blockquote>
+<h4 id="use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</h4>
 <p>This ensures that the proposal represents existing practice in widespread use.</p>
-</blockquote>
-<h4 id="base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper.">Base the interface on features in the Concepts TS and the Ranges TS working paper.</h4>
-<blockquote>
-<p>This eliminates the difficulties with specification of requirements that bedeviled the 2004 proposals. It ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake. The proposal is arguably an excellent poster child for the benefits of concepts.</p>
-</blockquote>
+<h4 id="base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper">Base the interface on features in the Concepts TS and the Ranges TS working paper</h4>
+<p>This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows an interface specification that ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake.</p>
+<h4 id="use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</h4>
+<p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
 <h2 id="technical-specifications">Technical Specifications</h2>
+<p><em>TBS</em></p>
 <h2 id="acknowledgements">Acknowledgements</h2>
+<p><em>TBS</em></p>
 <h2 id="references">References</h2>
 <p>[<a name="1">1</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="https://www.boost.org/doc/libs/1_59_0/libs/iterator/doc/iterator_facade.html">Boost Iterator Facade</a>, 2003.</p>
 <p>[<a name="2">2</a>] Chandler Carruth, <a href="https://github.com/llvm-mirror/llvm/blob/master/include/llvm/ADT/iterator.h">LLVM <code>iterator_facade_base</code> iterator.h</a>, 2014.</p>
