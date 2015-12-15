@@ -87,11 +87,9 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 &lsqb;<a name="2">2</a>&rsqb; Chandler Carruth, [LLVM ```iterator_facade_base``` iterator.h][2], 2014.
 
-&lsqb;<a name="3">3</a>&rsqb; Andrew Sutton, [N4553, Working Draft,
-C++ extensions for Concepts][3], 2015.
+&lsqb;<a name="3">3</a>&rsqb; Andrew Sutton, [N4553, Working Draft, C++ extensions for Concepts][3], 2015.
 
-&lsqb;<a name="4">4</a>&rsqb; Eric Niebler, Casey Carter, [N4650, Working Draft,
-C++ Extensions for Ranges][4], 2015.
+&lsqb;<a name="4">4</a>&rsqb; Eric Niebler, Casey Carter, [N4650, Working Draft, C++ Extensions for Ranges][4], 2015.
 
 &lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015.
 
