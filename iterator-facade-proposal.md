@@ -1,10 +1,16 @@
+# Library Iterator Facade Class
+
+>**Summary:** Proposes a library class template useful for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts Technical Specification (TS) and Ranges TS working paper. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.
+
 ## Table of Contents
+
+*TBS*
 
 ## Introduction
 
 ### Problem
 
-Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, so it is all too easy to forget subsidiary functions or other boilerplate.
+Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary functions or other boilerplate wrong.
 
 ### Solution
 
@@ -12,32 +18,35 @@ A class template that is given a few implementation functions can generate the f
 
 ### Proposal
 
-This paper proposes a modern iterator facade class template for the standard library. The proposal uses C++11/14/17 with concepts<sup>&lsqb;[3](#3)&rsqb;</sup> and ranges<sup>&lsqb;[4](#4)&rsqb;</sup> to allow straightforward specification and implementation. The proposal will break no existing code and break no existing ABI. A public open-source implementation and test suite is available on GitHub<sup>&lsqb;[5](#5)&rsqb;</sup>.
+This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>&lsqb;[3](#3)&rsqb;</sup> and ranges<sup>&lsqb;[4](#4)&rsqb;</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. A public open-source implementation and test suite is available on GitHub<sup>&lsqb;[5](#5)&rsqb;</sup>.
 
 The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.
 
 ### History
 
-A 2004 proposal<sup>&lsqb;[6](#6)&rsqb;</sup> based on Boost iterator_facade failed because it depended an iterator update proposal<sup>&lsqb;[7](#7)&rsqb;</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.
-
-## Motivation and Scope
-
-**Why is this important?**
-+ It eases the task of creating standard library conforming iterators.
-
-*What kinds of problems does it address? What is the intended user community?*
-
-*What level of programmers (novice, experienced, expert) is it intended to support?* All levels.
-*What existing practice is it based on? How widespread is its use? How long has it been in use? Is there a reference implementation and test suite available for inspection?*
+A 2004 proposal<sup>&lsqb;[6](#6)&rsqb;</sup> based on Boost ```iterator_facade``` failed because it depended an iterator update proposal<sup>&lsqb;[7](#7)&rsqb;</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.
 
 ## Examples
 
+*TBS*
+
 ## Design Decisions
 
+#### Use Boost ```iterator_facade``` as a role model
+
+This ensures that the proposal represents existing practice in widespread use.
+
+#### Base the interface on features in the Concepts TS and the Ranges TS working paper
+
+This eliminates the difficulties with specification of requirements that bedeviled the 2004 proposals. It ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake. The proposal is arguably an excellent poster child for the benefits of concepts.
 
 ## Technical Specifications
 
+*TBS*
+
 ## Acknowledgements
+
+*TBS*
 
 ## References
 [1]: https://www.boost.org/doc/libs/1_59_0/libs/iterator/doc/iterator_facade.html
@@ -64,6 +73,5 @@ C++ Extensions for Ranges][4], 2015.
 &lsqb;<a name="6">6</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1641, Iterator Facade and Adaptor][6], 2004.
 
 &lsqb;<a name="7">7</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1640, New Iterator Concepts][7], 2004.
-
 
 ------

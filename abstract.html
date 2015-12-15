@@ -32,21 +32,22 @@ based on the requirements set out in C++98.
 provided iterator facade classes inspired by the Boost library.</p>
 <h3>Proposal</h3>
 <p>This paper proposes a modern iterator facade class template for the standard 
-library. C++11/14/17 with <span style="background-color: #FFFF00">concepts</span> 
-and <span style="background-color: #FFFF00">ranges</span> allows straightforward 
-iterator facade specification and implementation.</p>
-<p>The proposal will break no existing code and break no existing ABI. A public 
-open-source <span style="background-color: #FFFF00">implementation</span> is 
-available on GitHub.</p>
+library. The proposal uses C++11/14/17 with
+<span style="background-color: #FFFF00">concepts</span> and
+<span style="background-color: #FFFF00">ranges</span> to allow straightforward 
+specification and implementation. The proposal will break no existing code and 
+break no existing ABI. A public open-source
+<span style="background-color: #FFFF00">implementation</span> is available on 
+GitHub.</p>
 <p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. 
 Otherwise, the proposal is suitable for the Ranges TS. No other core language or 
 library changes are required.</p>
 <h3>History</h3>
 <p>A 2004 <span style="background-color: #FFFF00">proposal</span> based on Boost
-<code>iterator_facade</code> failed when an
-<span style="background-color: #FFFF00">iterator update proposal</span> it 
-depended upon failed because C++03 without concepts was not rich enough to 
-express the necessary iterator requirements.</p>
+<code>iterator_facade</code> failed because it depended an
+<span style="background-color: #FFFF00">iterator update proposal</span> that 
+failed because C++03 without concepts was not rich enough to express the 
+necessary iterator requirements.</p>
 <p>&nbsp;</p>
 
 </body>

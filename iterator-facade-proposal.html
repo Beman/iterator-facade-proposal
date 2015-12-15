@@ -1,24 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="styles.css" type="text/css" />
+</head>
+<body>
+<h1 id="library-iterator-facade-class">Library Iterator Facade Class</h1>
+<blockquote>
+<p><strong>Summary:</strong> Proposes a library class template useful for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts Technical Specification (TS) and Ranges TS working paper. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.</p>
+</blockquote>
 <h2 id="table-of-contents">Table of Contents</h2>
+<p><em>TBS</em></p>
 <h2 id="introduction">Introduction</h2>
 <h3 id="problem">Problem</h3>
-<p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, so it is all too easy to subsidiary functions or other boilerplate wrong.</p>
+<p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary functions or other boilerplate wrong.</p>
 <h3 id="solution">Solution</h3>
 <p>A class template that is given a few implementation functions can generate the facade (i.e. public interface and private implementation) for a fully conforming iterator, including all boilerplate. Boost <code>iterator_facade</code> pioneered this approach and has been in wide use since 2001<sup>[<a href="#1">1</a>]</sup>. It eases writing conforming iterators and has proven less error prone than hand-coded iterators. The generated iterator conforms to an extended set of requirements based on the C++98 iterator requirements. Others, such as Chandler Carruth's LLVM <code>iterator_facade_base</code><sup>[<a href="#2">2</a>]</sup>, have provided similar classes inspired by the Boost library.</p>
 <h3 id="proposal">Proposal</h3>
-<p>This paper proposes a modern iterator facade class template for the standard library. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation. The proposal will break no existing code and break no existing ABI. A public open-source implementation and test suite is available on GitHub<sup>[<a href="#5">5</a>]</sup>.</p>
+<p>This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. A public open-source implementation and test suite is available on GitHub<sup>[<a href="#5">5</a>]</sup>.</p>
 <p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.</p>
 <h3 id="history">History</h3>
-<p>A 2004 proposal<sup>[<a href="#6">6</a>]</sup> based on Boost iterator_facade failed because it depended an iterator update proposal<sup>[<a href="#7">7</a>]</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.</p>
-<h2 id="motivation-and-scope">Motivation and Scope</h2>
-<p><strong>Why is this important?</strong></p>
-<ul>
-<li>It eases the task of creating standard library conforming iterators.</li>
-</ul>
-<p><em>What kinds of problems does it address? What is the intended user community?</em></p>
-<p><em>What level of programmers (novice, experienced, expert) is it intended to support?</em> All levels.<br />
-<em>What existing practice is it based on? How widespread is its use? How long has it been in use? Is there a reference implementation and test suite available for inspection?</em></p>
+<p>A 2004 proposal<sup>[<a href="#6">6</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended an iterator update proposal<sup>[<a href="#7">7</a>]</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.</p>
 <h2 id="examples">Examples</h2>
 <h2 id="design-decisions">Design Decisions</h2>
+<h4 id="use-boost-iterator_facade-as-a-role-model.">Use Boost <code>iterator_facade</code> as a role model.**</h4>
+<blockquote>
+<p>This ensures that the proposal represents existing practice in widespread use.</p>
+</blockquote>
+<h4 id="base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper.">Base the interface on features in the Concepts TS and the Ranges TS working paper.</h4>
+<blockquote>
+<p>This eliminates the difficulties with specification of requirements that bedeviled the 2004 proposals. It ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake. The proposal is arguably an excellent poster child for the benefits of concepts.</p>
+</blockquote>
 <h2 id="technical-specifications">Technical Specifications</h2>
 <h2 id="acknowledgements">Acknowledgements</h2>
 <h2 id="references">References</h2>
@@ -32,3 +48,5 @@ C++ Extensions for Ranges</a>, 2015.</p>
 <p>[<a name="6">6</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html">N1641, Iterator Facade and Adaptor</a>, 2004.</p>
 <p>[<a name="7">7</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html">N1640, New Iterator Concepts</a>, 2004.</p>
 <hr />
+</body>
+</html>
