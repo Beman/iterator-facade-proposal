@@ -19,7 +19,9 @@
 </tr>
 </table>
 
-# Iterator Facade Library Proposal
+# Iterator Facade Library Proposal for Ranges
+
+*"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
 >**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.
 
