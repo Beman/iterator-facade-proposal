@@ -1,11 +1,11 @@
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left">DnnnnR0</td>
+  <td align="left">D0186R0</td>
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left">2015-12-15</td>
+  <td align="left">2015-12-20</td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -64,10 +64,12 @@ This ensures that the proposal represents existing practice in widespread use.
 This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows an interface specification that ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake.
 
 #### Use Cursor mixins to supply implementation details
-
+ 
 Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.
 
-## Technical Specifications
+## Proposed wording
+
+*Proposed wording is relative to the Working Draft, C++ Extensions for Ranges*
 
 *TBS*
 
