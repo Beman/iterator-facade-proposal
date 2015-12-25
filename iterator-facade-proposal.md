@@ -180,7 +180,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
     template <class C, class T>
       concept bool Writable()
         { return requires(C& c, T&& t)
-          { access::write(c, __stl2::forward<T>(t)); }; }
+          { access::write(c, forward<T>(t)); }; }
     template <class C, class O>
       concept bool HasEqual()
         { return requires(const C& l, const O& r) { access::equal(l, r); }; }
@@ -325,9 +325,9 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
 
       template <class C, class T>
       requires
-        requires(C& c, T&& t) { c.write(__stl2::forward<T>(t)); }
+        requires(C& c, T&& t) { c.write(forward<T>(t)); }
       static constexpr void write(C& c, T&& t)
-      STL2_NOEXCEPT_RETURN((void)c.write(__stl2::forward<T>(t)))
+      STL2_NOEXCEPT_RETURN((void)c.write(forward<T>(t)))
 
       template <class C>
       requires
@@ -368,7 +368,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       requires
         requires(const C& c) { c.read(); }
       static constexpr decltype(auto) move(const C& c)
-      STL2_NOEXCEPT_RETURN(__stl2::move(c.read()))
+      STL2_NOEXCEPT_RETURN(move(c.read()))
 
       template <class C>
       requires
@@ -383,7 +383,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       requires
         requires(I&& i) { STL2_DEDUCE_AUTO_REF_REF(((I&&)i).pos()); }
       static constexpr auto&& cursor(I&& i)
-      STL2_NOEXCEPT_RETURN(__stl2::forward<I>(i).pos())
+      STL2_NOEXCEPT_RETURN(forward<I>(i).pos())
     };  // class access
 ```
 
@@ -425,7 +425,7 @@ This section defines concepts required by the various forms of cursors on which 
     template <class C, class T>
     concept bool CursorWrite =
       requires (C& c, T&& t) {
-        cursor_access::write(c, __stl2::forward<T>(t));
+        cursor_access::write(c, forward<T>(t));
     };
 
     template <class C>
