@@ -138,12 +138,13 @@ Iterator adaptors generate new iterator types from existing iterator types.
 
 #### Iterator facades [iterator.facades]
 
-Iterator facades generate new iterator types from cursor types. Cursor types describe the minimum functionality required to generate an iterator facade type. 
+Iterator facades generate new iterator types from cursor types. Cursor types describe the minimum functionality required to generate fully compliant iterators.
 
-
-[Note: The iterator facade supplies the remaining functionality and boilerplate required to generate a fully compliant iterator. -- End Note]
+<span style="background-color:lightgrey">*Class template ```basic_iterator``` is the only iterator facade currently proposed.*</span> 
 
 #### Namespace cursor synopsis [cursor.synopsis]
+
+Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers needed to create cursor types.
 
 ```
   namespace cursor {
@@ -385,73 +386,6 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       static constexpr auto&& cursor(I&& i)
       STL2_NOEXCEPT_RETURN(forward<I>(i).pos())
     };  // class access
-```
-
-#### Cursor concepts [cursor.concepts]
-
-This section defines concepts required by the various forms of cursors on which iterator facades are built.
-
-```
-    template <class C>
-    concept bool CursorCurrent = requires (C& c) {
-      cursor_access::current(c);
-    };
-    template <class C>
-    concept bool CursorArrow = requires (C& c) {
-      cursor_access::arrow(c);
-    };
-    template <class C>
-    concept bool CursorNext = requires (C& c) {
-      cursor_access::next(c);
-    };
-    template <class C>
-    concept bool CursorPrev = requires (C& c) {
-      cursor_access::prev(c);
-    };
-    template <class C, class O>
-    concept bool CursorEqual =  requires (const C& l, const O& r) {
-      cursor_access::equal(l, r);
-    };
-    template <class C>
-    concept bool CursorAdvance =
-      requires (C& c, cursor_access::DifferenceType<C> n) {
-        cursor_access::advance(c, n);
-    };
-    template <class C, class O>
-    concept bool CursorDistance =
-      requires (const C& l, const O& r) {
-        cursor_access::distance(l, r);
-    };
-    template <class C, class T>
-    concept bool CursorWrite =
-      requires (C& c, T&& t) {
-        cursor_access::write(c, forward<T>(t));
-    };
-
-    template <class C>
-    concept bool Cursor =
-      Semiregular<C>() && Semiregular<cursor_access::mixin_t<C>>();
-    template <class C>
-    concept bool WeakInputCursor =
-      Cursor<C> && CursorCurrent<C> &&
-      CursorNext<C> && requires {
-        typename cursor_access::ValueType<C>;
-      };
-    template <class C>
-    concept bool ForwardCursor =
-      WeakInputCursor<C> && CursorEqual<C, C>;
-    template <class C>
-    concept bool InputCursor =
-      ForwardCursor<C> && cursor_access::single_pass<C>::value;
-    template <class C>
-    concept bool BidirectionalCursor =
-      ForwardCursor<C> && CursorPrev<C>;
-    template <class C>
-    concept bool RandomAccessCursor =
-      BidirectionalCursor<C> && CursorAdvance<C> && CursorDistance<C, C>;
-    template <class C>
-    concept bool ContiguousCursor =
-      RandomAccessCursor<C> && cursor_access::contiguous<C>::value;
 ```
 
 ## Acknowledgements
