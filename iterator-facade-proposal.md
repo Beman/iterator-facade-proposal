@@ -222,7 +222,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
     template <Contiguous C>
       struct category<C> { using type = ext::contiguous_iterator_tag; };
     template <class C>
-      using category_t = meta::_t<category<C>>;
+      using category_t = typename category<C>::type;
   }  // namespace cursor
 ```
 
@@ -246,7 +246,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
         struct reference_type<C> 
           { using type = decltype(declval<const C&>().read()); };
       template <class C>
-        using reference_t = meta::_t<reference_type<C>>;
+        using reference_t = typename reference_type<C>::type;
 
       // Not a bool variable template due to GCC PR68666.
       template <class>
@@ -271,7 +271,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       struct contiguous<C> : true_type {};
 
       template <class T>
-        using mixin_t = meta::_t<mixin_base<T>>;
+        using mixin_t = typename mixin_base<T>::type;
 
       template <class>
       struct difference_type {
@@ -290,8 +290,8 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       };
       template <class C>
       requires
-        SignedIntegral<meta::_t<difference_type<C>>>()
-      using difference_type_t = meta::_t<difference_type<C>>;
+        SignedIntegral<typename difference_type<C>::type>()
+      using difference_type_t = typename difference_type<C>::type;
 
       template <class C>
       struct value_type {};
@@ -308,8 +308,8 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       };
       template <class C>
       requires
-        Same<meta::_t<value_type<C>>, decay_t<meta::_t<value_type<C>>>>()
-      using value_type_t = meta::_t<value_type<C>>;
+        Same<typename value_type<C>::type, decay_t<typename value_type<C>::type>>()
+      using value_type_t = typename value_type<C>::type;
 
       template <class C>
       requires
