@@ -23,7 +23,7 @@
 
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
->**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.
+>**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations and test suites available. Draft wording provided.
 
 ## Table of Contents
 
@@ -41,13 +41,13 @@ A class template that is given a few implementation functions can generate the f
 
 ### Proposal
 
-This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>&lsqb;[3](#3)&rsqb;</sup> and ranges<sup>&lsqb;[4](#4)&rsqb;</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. A public open-source implementation and test suite is available on GitHub<sup>&lsqb;[5](#5)&rsqb;</sup>.
+This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>&lsqb;[3](#3)&rsqb;</sup> and ranges<sup>&lsqb;[4](#4)&rsqb;</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. Two open-source implementations with test suites are available on GitHub<sup>&lsqb;[5](#5)&rsqb;&lsqb;[6](#6)&rsqb;</sup>.
 
 The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.
 
 ### History
 
-A 2004 proposal<sup>&lsqb;[6](#6)&rsqb;</sup> based on Boost ```iterator_facade``` failed because it depended an iterator update proposal<sup>&lsqb;[7](#7)&rsqb;</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.
+A 2004 proposal<sup>&lsqb;[7](#7)&rsqb;</sup> based on Boost ```iterator_facade``` failed because it depended on an iterator update proposal<sup>&lsqb;[8](#8)&rsqb;</sup> that failed because without concepts the language was not rich enough to express the necessary iterator requirements.
 
 ## Examples
 
@@ -209,7 +209,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       concept bool Contiguous()
         { return RandomAccess<C>() && access::contiguous<C>::value; }
 
-    // category trait 
+    // category traits 
     template <class>  struct category {};
     template <Input C>
       struct category<C> { using type = input_iterator_tag; };
@@ -232,26 +232,21 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
   namespace cursor {
     class access {
       template <class T>
-      struct mixin_base {
-        using type = basic_mixin<T>;
-      };
+        struct mixin_base { using type = basic_mixin<T>; };
       template <class T>
-      requires requires { typename T::mixin; }
-      struct mixin_base<T> {
-        using type = typename T::mixin;
-      };
+        requires requires { typename T::mixin; }
+        struct mixin_base<T> { using type = typename T::mixin; };
 
     public:
       template <class>
-      struct reference_type {};
+        struct reference_type {};
       template <class C>
-      requires
-        requires(const C& c) { STL2_DEDUCE_AUTO_REF_REF(c.read()); }
-      struct reference_type<C> {
-        using type = decltype(declval<const C&>().read());
-      };
+        requires
+          requires(const C& c) { STL2_DEDUCE_AUTO_REF_REF(c.read()); }
+        struct reference_type<C> 
+          { using type = decltype(declval<const C&>().read()); };
       template <class C>
-      using reference_t = meta::_t<reference_type<C>>;
+        using reference_t = meta::_t<reference_type<C>>;
 
       // Not a bool variable template due to GCC PR68666.
       template <class>
@@ -276,7 +271,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       struct contiguous<C> : true_type {};
 
       template <class T>
-      using mixin_t = meta::_t<mixin_base<T>>;
+        using mixin_t = meta::_t<mixin_base<T>>;
 
       template <class>
       struct difference_type {
@@ -469,8 +464,9 @@ This section defines concepts required by the various forms of cursors on which 
 [3]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4553.pdf
 [4]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 [5]: https://github.com/ericniebler/range-v3
-[6]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html
-[7]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html
+[6]: https://github.com/CaseyCarter/cmcstl2
+[7]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html
+[8]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html
 
 
 &lsqb;<a name="1">1</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [Boost Iterator Facade][1], 2003.
@@ -481,10 +477,12 @@ This section defines concepts required by the various forms of cursors on which 
 
 &lsqb;<a name="4">4</a>&rsqb; Eric Niebler, Casey Carter, [N4650, Working Draft, C++ Extensions for Ranges][4], 2015.
 
-&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015.
+&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015. Requires C++14 compilers. Simulates concepts with macros and templates.
 
-&lsqb;<a name="6">6</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1641, Iterator Facade and Adaptor][6], 2004.
+&lsqb;<a name="6">6</a>&rsqb; Casey Carter, Eric Niebler, [An implementation of C++ Extensions for Ranges][6], 2015. Requires C++14 compiler supporting concepts (e.g. GCC trunk).
 
-&lsqb;<a name="7">7</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1640, New Iterator Concepts][7], 2004.
+&lsqb;<a name="7">7</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1641, Iterator Facade and Adaptor][7], 2004.
+
+&lsqb;<a name="8">8</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1640, New Iterator Concepts][8], 2004.
 
 ------
