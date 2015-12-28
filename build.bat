@@ -1,0 +1,1 @@
+g++ -std=c++1z -fmax-errors=5 -I../cmcstl2/include %*

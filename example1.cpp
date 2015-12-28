@@ -10,44 +10,47 @@
 #include <cstring>
 #include <cassert>
 #include <tuple>
-#include <stl2/detail/basic_iterator.hpp>
+#include <iostream>
+#include <stl2/detail/iterator/basic_iterator.hpp>
 
-#include <stl2/detail/counted_iterator.hpp>
+//#include <stl2/detail/iterator/counted_iterator.hpp>
+
+namespace stl2 = __stl2;
 
 namespace
 {
-  template<typename I>
   struct cursor
   {
-    I it_;
-    struct mixin : ranges::basic_mixin<cursor>
+  public:
+    cursor() = default;
+
+    struct mixin : protected stl2::basic_mixin<cursor>
     {
       mixin() = default;
-      mixin(cursor c) : ranges::basic_mixin<cursor>(c) {}
-      mixin(I i) : ranges::basic_mixin<cursor>(cursor{i}) {}
+      using stl2::basic_mixin<cursor>::basic_mixin;
+      mixin(I p) : basic_mixin<cursor>(cursor{p}) {}
     };
-    cursor() = default;
-    explicit cursor(I i) : it_(i) {}
-    template<class J, CONCEPT_REQUIRES_(ranges::ConvertibleTo<J, I>())>
-    cursor(cursor<J> that) : it_(std::move(that.it_)) {}
 
-    auto get() const -> decltype(*it_) { return *it_; }
-    void next() { ++it_; }
+    explicit cursor(const char* p) : p_(p) {}
+
+    auto get() const -> decltype(*p_) { return *p_; }
+    void next() { ++p_; }
+
+  private:
+    const char* p_;
   };
 
-  template<class I>
-  using iterator = ranges::basic_iterator<cursor<I>>;
+  using iterator = stl2::basic_iterator<cursor>;
 
 }  // unnamed namespace
 
 int main()
 {
   std::cout << "\nTesting basic_iterator\n";
-  using I = iterator<char const *>;
 
   static const char sz[] = "hello world";
-  I i{sz};
-  assert(*i == 'h');
-  ++i;
-  assert(*i == 'e');
+  iterator itr{sz};
+  assert(*itr == 'h');
+  ++itr;
+  assert(*itr == 'e');
 }
