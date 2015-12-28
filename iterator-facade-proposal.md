@@ -23,7 +23,7 @@
 
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
->**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations and test suites available. Draft wording provided.
+>**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@
 
 ### Problem
 
-Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary functions or other boilerplate wrong.
+Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few core functions, they also need subsidiary types, functions, and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary types, functions, or other boilerplate wrong.
 
 ### Solution
 
@@ -72,6 +72,16 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 <span style="background-color:lightgrey">*Editorial comments are shown in italics with a light grey background.*</span>
 
 <span style="background-color:lightgrey">*Proposed wording is relative to the Working Draft, C++ Extensions for Ranges*</span>
+
+<span style="background-color:lightgrey">*For brevity, clarity, and reduced specification errors, add the following at a location to be determined by the project editor:*</span>
+
+#### Method of description (Informative)
+
+Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.
+
+Namespaces with names reserved to the implementation are for the sake of exposition  only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.
+
+>[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
 
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
 
@@ -159,37 +169,42 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       using value_type_t = access::value_type_t<C>;
     template <class C>
       using difference_type_t = access::difference_type_t<C>;
-    
+      
+    // for exposition only
+    namespace __impl
+    {  
+      template <class C>
+        concept bool Arrow()
+          { return requires(C& c) { access::arrow(c); }; }
+      template <class C>
+        concept bool Next()
+          { return requires(C& c) { access::next(c); }; }
+      template <class C>
+        concept bool Prev()
+          { return requires(C& c) { access::prev(c); }; }
+      template <class C>
+        concept bool Advance()
+          { return requires(C& c, difference_type_t<C> n)
+            { access::advance(c, n); }; }
+      template <class C, class O>
+        concept bool Distance()
+          { return requires(const C& l, const O& r)
+            { access::distance(l, r); }; }
+      template <class C, class O>
+        concept bool HasEqual()
+          { return requires(const C& l, const O& r) { access::equal(l, r); }; }
+    }  // namespace __impl
+  
     // concepts
-    template <class C>
-      concept bool Arrow()
-        { return requires(C& c) { access::arrow(c); }; }
-    template <class C>
-      concept bool Next()
-        { return requires(C& c) { access::next(c); }; }
-    template <class C>
-      concept bool Prev()
-        { return requires(C& c) { access::prev(c); }; }
-    template <class C>
-      concept bool Advance()
-        { return requires(C& c, difference_type_t<C> n)
-          { access::advance(c, n); }; }
-    template <class C, class O>
-      concept bool Distance()
-        { return requires(const C& l, const O& r)
-          { access::distance(l, r); }; }
-    template <class C, class T>
-      concept bool Writable()
-        { return requires(C& c, T&& t)
-          { access::write(c, forward<T>(t)); }; }
-    template <class C, class O>
-      concept bool HasEqual()
-        { return requires(const C& l, const O& r) { access::equal(l, r); }; }
     template <class C>
       concept bool Readable()
         { return requires(C& c) {
           typename value_type_t<remove_cv_t<C>>;
           access::read(c); }; }
+    template <class C, class T>
+      concept bool Writable()
+        { return requires(C& c, T&& t)
+          { access::write(c, forward<T>(t)); }; }
     template <class C>
       concept bool Cursor()
         { return Semiregular<C>() && Semiregular<access::mixin_t<C>>(); }
@@ -228,6 +243,8 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
 ```
 
 #### Class cursor::access [cursor.access]
+
+
 
 ```
   namespace cursor {
@@ -411,9 +428,9 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
 
 &lsqb;<a name="4">4</a>&rsqb; Eric Niebler, Casey Carter, [N4650, Working Draft, C++ Extensions for Ranges][4], 2015.
 
-&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015. Requires C++14 compilers. Simulates concepts with macros and templates.
+&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015. Requires a C++14 compiler. Simulates concepts with macros and templates.
 
-&lsqb;<a name="6">6</a>&rsqb; Casey Carter, Eric Niebler, [An implementation of C++ Extensions for Ranges][6], 2015. Requires C++14 compiler supporting concepts (e.g. GCC trunk).
+&lsqb;<a name="6">6</a>&rsqb; Casey Carter, Eric Niebler, [An implementation of C++ Extensions for Ranges][6], 2015. Requires a C++14 compiler supporting concepts (e.g. GCC trunk).
 
 &lsqb;<a name="7">7</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1641, Iterator Facade and Adaptor][7], 2004.
 
