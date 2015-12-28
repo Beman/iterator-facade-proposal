@@ -23,7 +23,7 @@
 
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
->**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations and test suites available. Draft wording provided.
+>**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@
 
 ### Problem
 
-Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary functions or other boilerplate wrong.
+Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few core functions, they also need subsidiary types, functions, and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary types, functions, or other boilerplate wrong.
 
 ### Solution
 
@@ -73,6 +73,128 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 <span style="background-color:lightgrey">*Proposed wording is relative to the Working Draft, C++ Extensions for Ranges*</span>
 
+<span style="background-color:lightgrey">*For brevity, clarity, and reduced specification errors, add the following at a location to be determined by the project editor:*</span>
+
+#### Method of description (Informative)
+
+Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.
+
+Namespaces with names reserved to the implementation are for the sake of exposition  only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.
+
+>[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
+
+<span style="background-color:lightgrey">*Add to 24.8, Iterator adaptors [iterators.predef]:*</span>
+
+Iterator adaptors generate new iterator types from existing types.
+
+<span style="background-color:lightgrey">*Add a new iterator adapter at the end of 24.8, Iterator adaptors [iterators.predef]*</span>
+
+#### Basic iterators [iterator.basic]
+
+Class template ```basic_iterator``` is an iterator adaptor that iterates over the sequence described by a cursor type. [Namespace ```cursor```](#namespace-cursor) provides the classes, types, concepts, and traits needed to create cursor types.
+
+A cursor ```C``` extends the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin``` that is inherited publicly by ```basic_iterator```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
+
+[Class template ```basic_mixin```](#iterator-mixin) supports the creation of mixin types.
+
+>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, ```basic_iterator``` gets: (a) a cursor data member, and, optionally, (b) additional members and constructors. -- end note]
+  
+
+
+#### Class template ```basic_iterator```
+
+Class template ```basic_iterator``` describes an iterator over a sequence provided by a cursor type. 
+
+#### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
+
+Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
+
+```
+  namespace cursor {
+    class access;
+
+    // types
+    template <class C>
+      using reference_t = access::reference_t<C>;
+    template <class C>
+      using rvalue_reference_t = access::rvalue_reference_t<C>;
+    template <class C>
+      using value_type_t = access::value_type_t<C>;
+    template <class C>
+      using difference_type_t = access::difference_type_t<C>;
+      
+    // for exposition only
+    namespace __impl
+    {  
+      template <class C>
+        concept bool Arrow()
+          { return requires(C& c) { access::arrow(c); }; }
+      template <class C>
+        concept bool Next()
+          { return requires(C& c) { access::next(c); }; }
+      template <class C>
+        concept bool Prev()
+          { return requires(C& c) { access::prev(c); }; }
+      template <class C>
+        concept bool Advance()
+          { return requires(C& c, difference_type_t<C> n)
+            { access::advance(c, n); }; }
+      template <class C, class O>
+        concept bool Distance()
+          { return requires(const C& l, const O& r)
+            { access::distance(l, r); }; }
+      template <class C, class O>
+        concept bool HasEqual()
+          { return requires(const C& l, const O& r) { access::equal(l, r); }; }
+    }  // namespace __impl
+  
+    // concepts
+    template <class C>
+      concept bool Readable()
+        { return requires(C& c) {
+          typename value_type_t<remove_cv_t<C>>;
+          access::read(c); }; }
+    template <class C, class T>
+      concept bool Writable()
+        { return requires(C& c, T&& t)
+          { access::write(c, forward<T>(t)); }; }
+    template <class C>
+      concept bool Cursor()
+        { return Semiregular<C>() && Semiregular<access::mixin_t<C>>(); }
+    template <class C>
+      concept bool Input()
+        { return Cursor<C>() && Readable<C>() && Next<C>(); }
+    template <class C>
+      concept bool Forward()
+        { return Input<C>() && HasEqual<C, C>()
+            && !access::single_pass<C>::value; }
+    template <class C>
+      concept bool Bidirectional()
+        { return Forward<C>() && Prev<C>(); }
+    template <class C>
+      concept bool RandomAccess()
+        { return Bidirectional<C>() && Advance<C>() && Distance<C, C>(); }
+    template <class C>
+      concept bool Contiguous()
+        { return RandomAccess<C>() && access::contiguous<C>::value; }
+
+    // category traits 
+    template <class>  struct category {};
+    template <Input C>
+      struct category<C> { using type = input_iterator_tag; };
+    template <Forward C>
+      struct category<C> { using type = forward_iterator_tag; };
+    template <Bidirectional C>
+      struct category<C> { using type = bidirectional_iterator_tag; };
+    template <RandomAccess C>
+      struct category<C> { using type = random_access_iterator_tag; };
+    template <Contiguous C>
+      struct category<C> { using type = ext::contiguous_iterator_tag; };
+    template <class C>
+      using category_t = typename category<C>::type;
+  }  // namespace cursor
+```
+
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
 
 ```
@@ -83,10 +205,9 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 <span style="background-color:lightgrey">*Add somewhere:*</span>
         
-####  Class template <code>basic_mixin</code> [???.mixin]
+####  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]
 
-The class template <code>basic_mixin</code> describes objects that ???
-
+Class template <code>basic_mixin</code> describes an empty mixin type.
 
 ```
   template <Destructible T>
@@ -130,103 +251,9 @@ constexpr basic_mixin(T&& t)
 
 >*Effects:* Move constructs an object of type <code>basic_mixin</code>.
 
-<span style="background-color:lightgrey">*Add to 24.8, Iterator adaptors [iterators.predef]:*</span>
-
-Iterator adaptors generate new iterator types from existing iterator types.
-
-<span style="background-color:lightgrey">*Add a new sub-clause after 24.8, Iterator adaptors [iterators.predef]*</span>
-
-#### Iterator facades [iterator.facades]
-
-Iterator facades generate new iterator types from cursor types. Cursor types describe the minimum functionality required to generate an iterator facade type. 
-
-
-[Note: The iterator facade supplies the remaining functionality and boilerplate required to generate a fully compliant iterator. -- End Note]
-
-#### Namespace cursor synopsis [cursor.synopsis]
-
-```
-  namespace cursor {
-    class access;
-
-    // types
-    template <class C>
-      using reference_t = access::reference_t<C>;
-    template <class C>
-      using rvalue_reference_t = access::rvalue_reference_t<C>;
-    template <class C>
-      using value_type_t = access::value_type_t<C>;
-    template <class C>
-      using difference_type_t = access::difference_type_t<C>;
-    
-    // concepts
-    template <class C>
-      concept bool Arrow()
-        { return requires(C& c) { access::arrow(c); }; }
-    template <class C>
-      concept bool Next()
-        { return requires(C& c) { access::next(c); }; }
-    template <class C>
-      concept bool Prev()
-        { return requires(C& c) { access::prev(c); }; }
-    template <class C>
-      concept bool Advance()
-        { return requires(C& c, difference_type_t<C> n)
-          { access::advance(c, n); }; }
-    template <class C, class O>
-      concept bool Distance()
-        { return requires(const C& l, const O& r)
-          { access::distance(l, r); }; }
-    template <class C, class T>
-      concept bool Writable()
-        { return requires(C& c, T&& t)
-          { access::write(c, __stl2::forward<T>(t)); }; }
-    template <class C, class O>
-      concept bool HasEqual()
-        { return requires(const C& l, const O& r) { access::equal(l, r); }; }
-    template <class C>
-      concept bool Readable()
-        { return requires(C& c) {
-          typename value_type_t<remove_cv_t<C>>;
-          access::read(c); }; }
-    template <class C>
-      concept bool Cursor()
-        { return Semiregular<C>() && Semiregular<access::mixin_t<C>>(); }
-    template <class C>
-      concept bool Input()
-        { return Cursor<C>() && Readable<C>() && Next<C>(); }
-    template <class C>
-      concept bool Forward()
-        { return Input<C>() && HasEqual<C, C>()
-            && !access::single_pass<C>::value; }
-    template <class C>
-      concept bool Bidirectional()
-        { return Forward<C>() && Prev<C>(); }
-    template <class C>
-      concept bool RandomAccess()
-        { return Bidirectional<C>() && Advance<C>() && Distance<C, C>(); }
-    template <class C>
-      concept bool Contiguous()
-        { return RandomAccess<C>() && access::contiguous<C>::value; }
-
-    // category traits 
-    template <class>  struct category {};
-    template <Input C>
-      struct category<C> { using type = input_iterator_tag; };
-    template <Forward C>
-      struct category<C> { using type = forward_iterator_tag; };
-    template <Bidirectional C>
-      struct category<C> { using type = bidirectional_iterator_tag; };
-    template <RandomAccess C>
-      struct category<C> { using type = random_access_iterator_tag; };
-    template <Contiguous C>
-      struct category<C> { using type = ext::contiguous_iterator_tag; };
-    template <class C>
-      using category_t = meta::_t<category<C>>;
-  }  // namespace cursor
-```
-
 #### Class cursor::access [cursor.access]
+
+
 
 ```
   namespace cursor {
@@ -246,7 +273,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
         struct reference_type<C> 
           { using type = decltype(declval<const C&>().read()); };
       template <class C>
-        using reference_t = meta::_t<reference_type<C>>;
+        using reference_t = typename reference_type<C>::type;
 
       // Not a bool variable template due to GCC PR68666.
       template <class>
@@ -271,7 +298,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       struct contiguous<C> : true_type {};
 
       template <class T>
-        using mixin_t = meta::_t<mixin_base<T>>;
+        using mixin_t = typename mixin_base<T>::type;
 
       template <class>
       struct difference_type {
@@ -290,8 +317,8 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       };
       template <class C>
       requires
-        SignedIntegral<meta::_t<difference_type<C>>>()
-      using difference_type_t = meta::_t<difference_type<C>>;
+        SignedIntegral<typename difference_type<C>::type>()
+      using difference_type_t = typename difference_type<C>::type;
 
       template <class C>
       struct value_type {};
@@ -308,8 +335,8 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       };
       template <class C>
       requires
-        Same<meta::_t<value_type<C>>, decay_t<meta::_t<value_type<C>>>>()
-      using value_type_t = meta::_t<value_type<C>>;
+        Same<typename value_type<C>::type, decay_t<typename value_type<C>::type>>()
+      using value_type_t = typename value_type<C>::type;
 
       template <class C>
       requires
@@ -325,9 +352,9 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
 
       template <class C, class T>
       requires
-        requires(C& c, T&& t) { c.write(__stl2::forward<T>(t)); }
+        requires(C& c, T&& t) { c.write(forward<T>(t)); }
       static constexpr void write(C& c, T&& t)
-      STL2_NOEXCEPT_RETURN((void)c.write(__stl2::forward<T>(t)))
+      STL2_NOEXCEPT_RETURN((void)c.write(forward<T>(t)))
 
       template <class C>
       requires
@@ -368,7 +395,7 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       requires
         requires(const C& c) { c.read(); }
       static constexpr decltype(auto) move(const C& c)
-      STL2_NOEXCEPT_RETURN(__stl2::move(c.read()))
+      STL2_NOEXCEPT_RETURN(move(c.read()))
 
       template <class C>
       requires
@@ -383,75 +410,8 @@ Iterator facades generate new iterator types from cursor types. Cursor types des
       requires
         requires(I&& i) { STL2_DEDUCE_AUTO_REF_REF(((I&&)i).pos()); }
       static constexpr auto&& cursor(I&& i)
-      STL2_NOEXCEPT_RETURN(__stl2::forward<I>(i).pos())
+      STL2_NOEXCEPT_RETURN(forward<I>(i).pos())
     };  // class access
-```
-
-#### Cursor concepts [cursor.concepts]
-
-This section defines concepts required by the various forms of cursors on which iterator facades are built.
-
-```
-    template <class C>
-    concept bool CursorCurrent = requires (C& c) {
-      cursor_access::current(c);
-    };
-    template <class C>
-    concept bool CursorArrow = requires (C& c) {
-      cursor_access::arrow(c);
-    };
-    template <class C>
-    concept bool CursorNext = requires (C& c) {
-      cursor_access::next(c);
-    };
-    template <class C>
-    concept bool CursorPrev = requires (C& c) {
-      cursor_access::prev(c);
-    };
-    template <class C, class O>
-    concept bool CursorEqual =  requires (const C& l, const O& r) {
-      cursor_access::equal(l, r);
-    };
-    template <class C>
-    concept bool CursorAdvance =
-      requires (C& c, cursor_access::DifferenceType<C> n) {
-        cursor_access::advance(c, n);
-    };
-    template <class C, class O>
-    concept bool CursorDistance =
-      requires (const C& l, const O& r) {
-        cursor_access::distance(l, r);
-    };
-    template <class C, class T>
-    concept bool CursorWrite =
-      requires (C& c, T&& t) {
-        cursor_access::write(c, __stl2::forward<T>(t));
-    };
-
-    template <class C>
-    concept bool Cursor =
-      Semiregular<C>() && Semiregular<cursor_access::mixin_t<C>>();
-    template <class C>
-    concept bool WeakInputCursor =
-      Cursor<C> && CursorCurrent<C> &&
-      CursorNext<C> && requires {
-        typename cursor_access::ValueType<C>;
-      };
-    template <class C>
-    concept bool ForwardCursor =
-      WeakInputCursor<C> && CursorEqual<C, C>;
-    template <class C>
-    concept bool InputCursor =
-      ForwardCursor<C> && cursor_access::single_pass<C>::value;
-    template <class C>
-    concept bool BidirectionalCursor =
-      ForwardCursor<C> && CursorPrev<C>;
-    template <class C>
-    concept bool RandomAccessCursor =
-      BidirectionalCursor<C> && CursorAdvance<C> && CursorDistance<C, C>;
-    template <class C>
-    concept bool ContiguousCursor =
-      RandomAccessCursor<C> && cursor_access::contiguous<C>::value;
 ```
 
 ## Acknowledgements
@@ -477,9 +437,9 @@ This section defines concepts required by the various forms of cursors on which 
 
 &lsqb;<a name="4">4</a>&rsqb; Eric Niebler, Casey Carter, [N4650, Working Draft, C++ Extensions for Ranges][4], 2015.
 
-&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015. Requires C++14 compilers. Simulates concepts with macros and templates.
+&lsqb;<a name="5">5</a>&rsqb; Eric Niebler, Casey Carter, [Experimental range library for C++11/14/17][5], 2015. Requires a C++14 compiler. Simulates concepts with macros and templates.
 
-&lsqb;<a name="6">6</a>&rsqb; Casey Carter, Eric Niebler, [An implementation of C++ Extensions for Ranges][6], 2015. Requires C++14 compiler supporting concepts (e.g. GCC trunk).
+&lsqb;<a name="6">6</a>&rsqb; Casey Carter, Eric Niebler, [An implementation of C++ Extensions for Ranges][6], 2015. Requires a C++14 compiler supporting concepts (e.g. GCC trunk).
 
 &lsqb;<a name="7">7</a>&rsqb; David Abrahams, Jeremy Siek, Thomas Witt, [N1641, Iterator Facade and Adaptor][7], 2004.
 
