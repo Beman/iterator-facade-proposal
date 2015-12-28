@@ -83,78 +83,31 @@ Namespaces with names reserved to the implementation are for the sake of exposit
 
 >[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
 
-<span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
-
-```
-  // basic_mixin
-  template <Destructible T>
-  class basic_mixin;
-``` 
-
-<span style="background-color:lightgrey">*Add somewhere:*</span>
-        
-####  Class template <code>basic_mixin</code> [???.mixin]
-
-The class template <code>basic_mixin</code> describes objects that ???
-
-
-```
-  template <Destructible T>
-  class basic_mixin {
-  public:
-    constexpr basic_mixin()
-      noexcept(is_nothrow_default_constructible<T>::value)
-      requires DefaultConstructible<T>();
-    constexpr basic_mixin(const T& t)
-      noexcept(is_nothrow_copy_constructible<T>::value)
-      requires CopyConstructible<T>();
-    constexpr basic_mixin(T&& t)
-      noexcept(is_nothrow_move_constructible<T>::value)
-      requires MoveConstructible<T>();
-  };
-```
- 
-##### <code>basic_mixin</code> constructors [mixin.cons]
-
-```
-constexpr basic_mixin()
-  noexcept(is_nothrow_default_constructible<T>::value)
-  requires DefaultConstructible<T>();
-```
-
->*Effects:* Default constructs an object of type <code>basic_mixin</code>.
-
-```
-constexpr basic_mixin(const T& t)
-  noexcept(is_nothrow_copy_constructible<T>::value)
-  requires CopyConstructible<T>();
-```
-
->*Effects:* Copy constructs an object of type <code>basic_mixin</code>.
-
-```
-constexpr basic_mixin(T&& t)
-  noexcept(is_nothrow_move_constructible<T>::value)
-  requires MoveConstructible<T>();
-```
-
->*Effects:* Move constructs an object of type <code>basic_mixin</code>.
-
 <span style="background-color:lightgrey">*Add to 24.8, Iterator adaptors [iterators.predef]:*</span>
 
-Iterator adaptors generate new iterator types from existing iterator types.
+Iterator adaptors generate new iterator types from existing types.
 
-<span style="background-color:lightgrey">*Add a new sub-clause after 24.8, Iterator adaptors [iterators.predef]*</span>
+<span style="background-color:lightgrey">*Add a new iterator adapter at the end of 24.8, Iterator adaptors [iterators.predef]*</span>
 
-#### Iterator facades [iterator.facades]
+#### Basic iterators [iterator.basic]
 
-Iterator facades generate new iterator types from cursor types. Cursor types describe the minimum functionality required to generate fully compliant iterators.
+Class template ```basic_iterator``` is an iterator adaptor that iterates over the sequence described by a cursor type. [Namespace ```cursor```](#namespace-cursor) provides the classes, types, concepts, and traits needed to create cursor types.
 
-<span style="background-color:lightgrey">*Class template ```basic_iterator``` is the only iterator facade currently proposed.*</span> 
+A cursor ```C``` extends the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin``` that is inherited publicly by ```basic_iterator```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
 
-#### Namespace cursor synopsis [cursor.synopsis]
+[Class template ```basic_mixin```](#iterator-mixin) supports the creation of mixin types.
 
-Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers needed to create cursor types.
+>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, ```basic_iterator``` gets: (a) a cursor data member, and, optionally, (b) additional members and constructors. -- end note]
+  
+
+
+#### Class template ```basic_iterator```
+
+Class template ```basic_iterator``` describes an iterator over a sequence provided by a cursor type. 
+
+#### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
+
+Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
 
 ```
   namespace cursor {
@@ -241,6 +194,62 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       using category_t = typename category<C>::type;
   }  // namespace cursor
 ```
+
+<span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
+
+```
+  // basic_mixin
+  template <Destructible T>
+  class basic_mixin;
+``` 
+
+<span style="background-color:lightgrey">*Add somewhere:*</span>
+        
+####  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]
+
+Class template <code>basic_mixin</code> describes an empty mixin type.
+
+```
+  template <Destructible T>
+  class basic_mixin {
+  public:
+    constexpr basic_mixin()
+      noexcept(is_nothrow_default_constructible<T>::value)
+      requires DefaultConstructible<T>();
+    constexpr basic_mixin(const T& t)
+      noexcept(is_nothrow_copy_constructible<T>::value)
+      requires CopyConstructible<T>();
+    constexpr basic_mixin(T&& t)
+      noexcept(is_nothrow_move_constructible<T>::value)
+      requires MoveConstructible<T>();
+  };
+```
+ 
+##### <code>basic_mixin</code> constructors [mixin.cons]
+
+```
+constexpr basic_mixin()
+  noexcept(is_nothrow_default_constructible<T>::value)
+  requires DefaultConstructible<T>();
+```
+
+>*Effects:* Default constructs an object of type <code>basic_mixin</code>.
+
+```
+constexpr basic_mixin(const T& t)
+  noexcept(is_nothrow_copy_constructible<T>::value)
+  requires CopyConstructible<T>();
+```
+
+>*Effects:* Copy constructs an object of type <code>basic_mixin</code>.
+
+```
+constexpr basic_mixin(T&& t)
+  noexcept(is_nothrow_move_constructible<T>::value)
+  requires MoveConstructible<T>();
+```
+
+>*Effects:* Move constructs an object of type <code>basic_mixin</code>.
 
 #### Class cursor::access [cursor.access]
 
