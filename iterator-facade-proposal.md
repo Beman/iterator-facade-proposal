@@ -21,6 +21,8 @@
 
 # Iterator Facade Library Proposal for Ranges
 
+<span style="background-color:lightyellow">***This is the "no-access" branch, an experiment to see if removing mention of class ```access``` (i.e. considering it an implementation detail) results in a less confusing specification.***</span>
+
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
 >**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.
