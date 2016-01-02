@@ -103,73 +103,33 @@ A cursor ```C``` extends the interface of ```basic_iterator<C>``` by defining a 
   
 
 
-#### Class template ```basic_iterator```
-
-Class template ```basic_iterator``` describes an iterator over a sequence provided by a cursor type. 
-
 #### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
 
 Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
 
+#### Namespace cursor synopsis
+
 ```
   namespace cursor {
-    class access;
 
     // types
     template <class C>
-      using reference_t = access::reference_t<C>;
+      using reference_t = %!{see below}!%;
     template <class C>
-      using rvalue_reference_t = access::rvalue_reference_t<C>;
+      using rvalue_reference_t = %!{see below}!%;
     template <class C>
-      using value_type_t = access::value_type_t<C>;
+      using value_type_t = %!{see below}!%;
     template <class C>
-      using difference_type_t = access::difference_type_t<C>;
+      using difference_type_t = %!{see below}!%;
       
-    // for exposition only
-    namespace __impl
-    {  
-      template <class C>
-        concept bool Arrow()
-          { return requires(C& c) { access::arrow(c); }; }
-      template <class C>
-        concept bool Next()
-          { return requires(C& c) { access::next(c); }; }
-      template <class C>
-        concept bool Prev()
-          { return requires(C& c) { access::prev(c); }; }
-      template <class C>
-        concept bool Advance()
-          { return requires(C& c, difference_type_t<C> n)
-            { access::advance(c, n); }; }
-      template <class C, class O>
-        concept bool Distance()
-          { return requires(const C& l, const O& r)
-            { access::distance(l, r); }; }
-      template <class C, class O>
-        concept bool HasEqual()
-          { return requires(const C& l, const O& r) { access::equal(l, r); }; }
-    }  // namespace __impl
-  
     // concepts
     template <class C>
-      concept bool Readable()
-        { return requires(C& c) {
-          typename value_type_t<remove_cv_t<C>>;
-          access::read(c); }; }
-    template <class C, class T>
-      concept bool Writable()
-        { return requires(C& c, T&& t)
-          { access::write(c, forward<T>(t)); }; }
-    template <class C>
-      concept bool Cursor()
-        { return Semiregular<C>() && Semiregular<access::mixin_t<C>>(); }
+      concept bool Cursor();
     template <class C>
       concept bool Input()
         { return Cursor<C>() && Readable<C>() && Next<C>(); }
     template <class C>
-      concept bool Forward()
-        { return Input<C>() && HasEqual<C, C>()
-            && !access::single_pass<C>::value; }
+      concept bool Forward();
     template <class C>
       concept bool Bidirectional()
         { return Forward<C>() && Prev<C>(); }
@@ -177,11 +137,26 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       concept bool RandomAccess()
         { return Bidirectional<C>() && Advance<C>() && Distance<C, C>(); }
     template <class C>
-      concept bool Contiguous()
-        { return RandomAccess<C>() && access::contiguous<C>::value; }
+      concept bool Contiguous();
+    template <class C>
+      concept bool Readable();
+    template <class C, class T>
+      concept bool Writable();
+    template <class C>
+      concept bool Arrow();
+    template <class C>
+      concept bool Next();
+    template <class C>
+      concept bool Prev();
+    template <class C>
+      concept bool Advance();
+    template <class C, class O>
+      concept bool Distance();
+    template <class C, class O>
+      concept bool HasEqual();
 
     // category traits 
-    template <class>  struct category {};
+    template <class> struct category {};
     template <Input C>
       struct category<C> { using type = input_iterator_tag; };
     template <Forward C>
@@ -196,6 +171,88 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       using category_t = typename category<C>::type;
   }  // namespace cursor
 ```
+
+#### Namespace cursor semantics
+
+
+```
+template <class C>
+concept bool Cursor();
+```
+```Cursor<C>()``` is satisfied if and only if ```Semiregular<C>() && Semiregular<Mx>()``` is ```true```, where type ```Mx``` is deduced by the implementation to be ```C::mixin``` if member ```C::mixin``` is present, otherwise is deduced to be ```basic_mixin<C>```.
+
+```
+template <class C>
+concept bool Forward();
+```
+ 
+```Forward<C>``` is satisfied if and only if ```Input<C>()``` ```&& EqualityComparable<C, C>()``` ```&& !%!{imp}!%::single_pass<C>::value``` where ```single_pass``` is defined as if:
+
+<blockquote>
+<pre>
+template &lt;class&gt;
+constexpr bool single_pass = false;
+template &lt;class C&gt;
+  requires requires {
+    typename C::single_pass;
+    requires bool(C::single_pass::value);
+  }
+constexpr bool single_pass = true;</pre>
+</blockquote>
+
+```
+    template <class C>
+      concept bool Contiguous();
+```
+```Contiguous<C>``` is satisfied if and only if ```RandomAccess<C>()```, type ```C::contiguous``` exists, ```C::contiguous::value == true```, and.
+
+```
+    template <class C>
+      concept bool Readable();
+```
+```Readable<C>``` is satisfied if and only if
+
+```
+    template <class C, class T>
+      concept bool Writable();
+```
+```Writable<C, T>``` is satisfied if and only if
+
+```
+    template <class C>
+      concept bool Arrow();
+```
+```Arrow<C>``` is satisfied if and only if
+
+```
+    template <class C>
+      concept bool Next();
+```
+```Next<C>``` is satisfied if and only if
+
+```
+    template <class C>
+      concept bool Prev();
+```
+```Prev<C>``` is satisfied if and only if
+
+```
+    template <class C>
+      concept bool Advance();
+```
+```Advance<C>``` is satisfied if and only if
+
+```
+    template <class C, class O>
+      concept bool Distance();
+```
+```Distance<C>``` is satisfied if and only if
+
+```
+    template <class C, class O>
+      concept bool HasEqual();
+```
+```HasEqual<C>``` is satisfied if and only if
 
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
 
@@ -253,168 +310,23 @@ constexpr basic_mixin(T&& t)
 
 >*Effects:* Move constructs an object of type <code>basic_mixin</code>.
 
-#### Class cursor::access [cursor.access]
+#### Class template ```basic_iterator```
 
-
+Class template ```basic_iterator``` describes an iterator over a sequence provided by a cursor type. 
 
 ```
-  namespace cursor {
-    class access {
-      template <class T>
-        struct mixin_base { using type = basic_mixin<T>; };
-      template <class T>
-        requires requires { typename T::mixin; }
-        struct mixin_base<T> { using type = typename T::mixin; };
+namespace std { namespace experimental { namespace ranges_v1 { inline namespace v1 {
+  
+  template <Cursor C>  
+  class basic_iterator
+  : public cursor::access::mixin_t<C>,
+    public detail::iterator_associated_types_base<C>
+  {
 
-    public:
-      template <class>
-        struct reference_type {};
-      template <class C>
-        requires
-          requires(const C& c) { STL2_DEDUCE_AUTO_REF_REF(c.read()); }
-        struct reference_type<C> 
-          { using type = decltype(declval<const C&>().read()); };
-      template <class C>
-        using reference_t = typename reference_type<C>::type;
-
-      // Not a bool variable template due to GCC PR68666.
-      template <class>
-      struct single_pass : false_type {};
-      template <class C>
-      requires
-        requires {
-          typename C::single_pass;
-          requires bool(C::single_pass::value);
-        }
-      struct single_pass<C> : true_type {};
-
-      // Not a bool variable template due to GCC PR68666.
-      template <class> struct contiguous : false_type {};
-      template <class C>
-      requires
-        requires {
-          typename C::contiguous;
-          requires bool(C::contiguous::value);
-          requires _Is<reference_t<C>, is_reference>;
-        }
-      struct contiguous<C> : true_type {};
-
-      template <class T>
-        using mixin_t = typename mixin_base<T>::type;
-
-      template <class>
-      struct difference_type {
-        using type = std::ptrdiff_t;
-      };
-      template <detail::MemberDifferenceType C>
-      struct difference_type<C> {
-        using type = typename C::difference_type;
-      };
-      template <class C>
-      requires
-        !detail::MemberDifferenceType<C> &&
-        requires(const C& lhs, const C& rhs) { rhs.distance_to(lhs); }
-      struct difference_type<C> {
-        using type = decltype(declval<const C&>().distance_to(declval<const C&>()));
-      };
-      template <class C>
-      requires
-        SignedIntegral<typename difference_type<C>::type>()
-      using difference_type_t = typename difference_type<C>::type;
-
-      template <class C>
-      struct value_type {};
-      template <detail::MemberValueType C>
-      struct value_type<C> {
-        using type = typename C::value_type;
-      };
-      template <class C>
-      requires
-        !detail::MemberValueType<C> &&
-        requires { typename reference_t<C>; }
-      struct value_type<C> {
-        using type = decay_t<reference_t<C>>;
-      };
-      template <class C>
-      requires
-        Same<typename value_type<C>::type, decay_t<typename value_type<C>::type>>()
-      using value_type_t = typename value_type<C>::type;
-
-      template <class C>
-      requires
-        requires(C& c) { c.read(); }
-      static constexpr reference_t<C> read(C& c)
-      STL2_NOEXCEPT_RETURN(c.read())
-
-      template <class C>
-      requires
-        requires(C& c) { c.arrow(); }
-      static constexpr decltype(auto) arrow(C& c)
-      STL2_NOEXCEPT_RETURN(c.arrow())
-
-      template <class C, class T>
-      requires
-        requires(C& c, T&& t) { c.write(forward<T>(t)); }
-      static constexpr void write(C& c, T&& t)
-      STL2_NOEXCEPT_RETURN((void)c.write(forward<T>(t)))
-
-      template <class C>
-      requires
-        requires(C& c) { c.next(); }
-      static constexpr void next(C& c)
-      STL2_NOEXCEPT_RETURN((void)c.next())
-
-      template <class C>
-      requires
-        requires(C& c) { c.prev(); }
-      static constexpr void prev(C& c)
-      STL2_NOEXCEPT_RETURN((void)c.prev())
-
-      template <class C, class Other>
-      requires
-        requires(const C& lhs, const Other& rhs) {
-          { lhs.equal(rhs) } -> bool;
-        }
-      static constexpr bool equal(const C& lhs, const Other& rhs)
-      STL2_NOEXCEPT_RETURN(static_cast<bool>(lhs.equal(rhs)))
-
-      template <class C>
-      requires
-        requires(C& c, difference_type_t<C> n) { c.advance(n); }
-      static constexpr void advance(C& c, difference_type_t<C> n)
-      STL2_NOEXCEPT_RETURN((void)c.advance(n))
-
-      template <class C, class Other>
-      requires
-        requires(const C& lhs, const Other& rhs) {
-          STL2_EXACT_TYPE_CONSTRAINT(lhs.distance_to(rhs), difference_type_t<C>);
-        }
-      static constexpr difference_type_t<C>
-      distance(const C& lhs, const Other& rhs)
-      STL2_NOEXCEPT_RETURN(lhs.distance_to(rhs))
-
-      template <class C>
-      requires
-        requires(const C& c) { c.read(); }
-      static constexpr decltype(auto) move(const C& c)
-      STL2_NOEXCEPT_RETURN(move(c.read()))
-
-      template <class C>
-      requires
-        requires(const C& c) { c.read(); c.move(); }
-      static constexpr decltype(auto) move(const C& c)
-      STL2_NOEXCEPT_RETURN(c.move())
-
-      template <class C>
-      using rvalue_reference_t = decltype(access::move(declval<const C&>()));
-
-      template <class I>
-      requires
-        requires(I&& i) { STL2_DEDUCE_AUTO_REF_REF(((I&&)i).pos()); }
-      static constexpr auto&& cursor(I&& i)
-      STL2_NOEXCEPT_RETURN(forward<I>(i).pos())
-    };  // class access
+  
+}}}}
 ```
+
 
 ## Acknowledgements
 
