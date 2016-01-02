@@ -33,6 +33,7 @@
 <li><a href="#namespace-cursor-semantics">Namespace cursor semantics</a></li>
 <li><a href="#class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</a></li>
 <li><a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a></li>
+<li><a href="#types-basic_iterator.types">Types [basic_iterator.types]</a></li>
 </ul></li>
 <li><a href="#acknowledgements">Acknowledgements</a></li>
 <li><a href="#references">References</a></li>
@@ -259,12 +260,157 @@ constexpr bool single_pass = true;</pre>
   
   template &lt;Cursor C&gt;  
   class basic_iterator
-  : public cursor::access::mixin_t&lt;C&gt;,
-    public detail::iterator_associated_types_base&lt;C&gt;
+  : public <em>see below</em>
   {
-
+    // types
+    using difference_type = <em>see below</em>
+    
+    // constructors, assignments, and moves
+    basic_iterator() = default;
+    using mixin_t::mixin_t;
+    template &lt;ConvertibleTo&lt;C&gt; O&gt;
+    constexpr basic_iterator(basic_iterator&lt;O&gt; that)
+      noexcept(<em>see below</em>);
+    friend constexpr decltype(auto) iter_move(const basic_iterator&amp; i)
+      noexcept(<em>see below</em>)
+      requires cursor::Readable&lt;C&gt;();
+    
+    // dereferences
+    constexpr decltype(auto) operator*() const
+      noexcept(<em>see below</em>)
+    constexpr decltype(auto) operator*() noexcept;
+    constexpr decltype(auto) operator*() const noexcept;
+    constexpr decltype(auto) operator-&gt;() const noexcept(<em>see below</em>)
+      requires cursor::Arrow&lt;const C&gt;();
+         
+    // modifiers
+    constexpr basic_iterator&amp; operator++() &amp; noexcept;
+    constexpr basic_iterator&amp; operator++() &amp; noexcept(<em>see below</em>)
+      requires cursor::Next&lt;C&gt;();
+    constexpr basic_iterator&amp; operator++(int) &amp; noexcept;
+    constexpr postfix_increment_result_t operator++(int) &amp;
+      noexcept(<em>see below</em>)
+      requires cursor::Next&lt;C&gt;();
+    constexpr basic_iterator&amp; operator--() &amp; noexcept(<em>see below</em>)
+      requires cursor::Bidirectional&lt;C&gt;();
+    constexpr basic_iterator operator--(int) &amp; noexcept(<em>see below</em>)
+      requires cursor::Bidirectional&lt;C&gt;();
+    constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
+      noexcept(<em>see below</em>)
+      requires cursor::RandomAccess&lt;C&gt;();
+    constexpr basic_iterator&amp; operator-=(difference_type n) &amp;
+      noexcept(<em>see below</em>)
+      requires cursor::RandomAccess&lt;C&gt;();  
+    friend constexpr basic_iterator
+      operator+(const basic_iterator&amp; i, difference_type n)
+        noexcept(<em>see below</em>)
+        requires cursor::RandomAccess&lt;C&gt;();
+    friend constexpr basic_iterator
+      operator+(difference_type n, const basic_iterator&amp; i)
+        noexcept(noexcept(i + n))
+        requires cursor::RandomAccess&lt;C&gt;();
+    friend constexpr basic_iterator
+      operator-(const basic_iterator&amp; i, difference_type n)
+        noexcept(noexcept(i + -n))
+        requires cursor::RandomAccess&lt;C&gt;();    
+    constexpr decltype(auto) operator[](difference_type n) const
+      noexcept(noexcept(*(declval&lt;basic_iterator&amp;&gt;() + n)))
+      requires cursor::RandomAccess&lt;C&gt;();
+                   
+    // exposition only
+  private:
+    using mixin_type = <em>publicly inherited type descibed below</em>; 
+  };
   
+  // basic_iterator non-member functions
+  
+  template &lt;class C&gt;
+    requires cursor::EqualityComparable&lt;C, C&gt;()
+  constexpr bool operator==(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(<em>see below</em>);
+
+  template &lt;class C, class Other&gt;
+    requires cursor::EqualityComparable&lt;C, Other&gt;()
+  constexpr bool operator==(
+    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)
+    noexcept(<em>see below</em>);
+
+  template &lt;class C, class Other&gt;
+    requires cursor::EqualityComparable&lt;C, Other&gt;()
+  constexpr bool operator==(
+    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+  
+  template &lt;class C&gt;
+    requires cursor::EqualityComparable&lt;C, C&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C, class Other&gt;
+    requires cursor::EqualityComparable&lt;C, Other&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C, class Other&gt;
+    requires cursor::EqualityComparable&lt;C, Other&gt;()
+  constexpr bool operator!=(
+    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C&gt;
+    requires cursor::Distance&lt;C, C&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C, class Other&gt;
+    requires cursor::Distance&lt;C, Other&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)  
+    noexcept(<em>see below</em>);
+    
+  template &lt;class C, class Other&gt;
+    requires cursor::Distance&lt;C, Other&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C&gt;
+    requires cursor::Distance&lt;C, C&gt;()
+  constexpr bool operator&lt;(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C&gt;
+    requires cursor::Distance&lt;C, C&gt;()
+  constexpr bool operator&gt;(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C&gt;
+    requires cursor::Distance&lt;C, C&gt;()
+  constexpr bool operator&lt;=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
+
+  template &lt;class C&gt;
+    requires cursor::Distance&lt;C, C&gt;()
+  constexpr bool operator&gt;=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
+    noexcept(<em>see below</em>);
 }}}}</code></pre>
+<p>Class template <code>basic_iterator</code> shall publicly inherit from <code>C::mixin</code> if <code>C</code> defines a type named <code>mixin</code>, otherwise it shall publicly inherit from <code>basic_mixin&lt;C&gt;</code>.</p>
+<h4 id="types-basic_iterator.types">Types [basic_iterator.types]</h4>
+<pre><code>difference_type</code></pre>
+<p><code>difference_type</code> is defined as:</p>
+<ul>
+<li><code>C::difference_type</code> if <code>C</code> has a member type <code>difference_type</code>,</li>
+<li>otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a function,</li>
+<li>otherwise <code>std::ptrdiff_t</code>.</li>
+</ul>
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p><em>TBS</em></p>
 <h2 id="references">References</h2>

@@ -319,14 +319,163 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
   
   template <Cursor C>  
   class basic_iterator
-  : public cursor::access::mixin_t<C>,
-    public detail::iterator_associated_types_base<C>
+  : public %!{see below}!%
   {
-
+    // types
+    using difference_type = %!{see below}!%
+    
+    // constructors, assignments, and moves
+    basic_iterator() = default;
+    using mixin_t::mixin_t;
+    template <ConvertibleTo<C> O>
+    constexpr basic_iterator(basic_iterator<O> that)
+      noexcept(%!{see below}!%);
+    friend constexpr decltype(auto) iter_move(const basic_iterator& i)
+      noexcept(%!{see below}!%)
+      requires cursor::Readable<C>();
+    
+    // dereferences
+    constexpr decltype(auto) operator*() const
+      noexcept(%!{see below}!%)
+    constexpr decltype(auto) operator*() noexcept;
+    constexpr decltype(auto) operator*() const noexcept;
+    constexpr decltype(auto) operator->() const noexcept(%!{see below}!%)
+      requires cursor::Arrow<const C>();
+         
+    // modifiers
+    constexpr basic_iterator& operator++() & noexcept;
+    constexpr basic_iterator& operator++() & noexcept(%!{see below}!%)
+      requires cursor::Next<C>();
+    constexpr basic_iterator& operator++(int) & noexcept;
+    constexpr postfix_increment_result_t operator++(int) &
+      noexcept(%!{see below}!%)
+      requires cursor::Next<C>();
+    constexpr basic_iterator& operator--() & noexcept(%!{see below}!%)
+      requires cursor::Bidirectional<C>();
+    constexpr basic_iterator operator--(int) & noexcept(%!{see below}!%)
+      requires cursor::Bidirectional<C>();
+    constexpr basic_iterator& operator+=(difference_type n) &
+      noexcept(%!{see below}!%)
+      requires cursor::RandomAccess<C>();
+    constexpr basic_iterator& operator-=(difference_type n) &
+      noexcept(%!{see below}!%)
+      requires cursor::RandomAccess<C>();  
+    friend constexpr basic_iterator
+      operator+(const basic_iterator& i, difference_type n)
+        noexcept(%!{see below}!%)
+        requires cursor::RandomAccess<C>();
+    friend constexpr basic_iterator
+      operator+(difference_type n, const basic_iterator& i)
+        noexcept(noexcept(i + n))
+        requires cursor::RandomAccess<C>();
+    friend constexpr basic_iterator
+      operator-(const basic_iterator& i, difference_type n)
+        noexcept(noexcept(i + -n))
+        requires cursor::RandomAccess<C>();    
+    constexpr decltype(auto) operator[](difference_type n) const
+      noexcept(noexcept(*(declval<basic_iterator&>() + n)))
+      requires cursor::RandomAccess<C>();
+                   
+    // exposition only
+  private:
+    using mixin_type = %!{publicly inherited type descibed below}!%; 
+  };
   
+  // basic_iterator non-member functions
+  
+  template <class C>
+    requires cursor::EqualityComparable<C, C>()
+  constexpr bool operator==(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(%!{see below}!%);
+
+  template <class C, class Other>
+    requires cursor::EqualityComparable<C, Other>()
+  constexpr bool operator==(
+    const basic_iterator<C>& lhs, const Other& rhs)
+    noexcept(%!{see below}!%);
+
+  template <class C, class Other>
+    requires cursor::EqualityComparable<C, Other>()
+  constexpr bool operator==(
+    const Other& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+  
+  template <class C>
+    requires cursor::EqualityComparable<C, C>()
+  constexpr bool operator!=(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C, class Other>
+    requires cursor::EqualityComparable<C, Other>()
+  constexpr bool operator!=(
+    const basic_iterator<C>& lhs, const Other& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C, class Other>
+    requires cursor::EqualityComparable<C, Other>()
+  constexpr bool operator!=(
+    const Other& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C>
+    requires cursor::Distance<C, C>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C, class Other>
+    requires cursor::Distance<C, Other>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const basic_iterator<C>& lhs, const Other& rhs)  
+    noexcept(%!{see below}!%);
+    
+  template <class C, class Other>
+    requires cursor::Distance<C, Other>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const Other& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C>
+    requires cursor::Distance<C, C>()
+  constexpr bool operator<(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C>
+    requires cursor::Distance<C, C>()
+  constexpr bool operator>(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C>
+    requires cursor::Distance<C, C>()
+  constexpr bool operator<=(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
+
+  template <class C>
+    requires cursor::Distance<C, C>()
+  constexpr bool operator>=(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
+    noexcept(%!{see below}!%);
 }}}}
 ```
 
+Class template ```basic_iterator``` shall publicly inherit from ```C::mixin``` if ```C``` defines a type named ```mixin```, otherwise it shall publicly inherit from ```basic_mixin<C>```.
+
+#### Types [basic_iterator.types]
+
+```
+difference_type
+```
+
+```difference_type``` is defined as:
+
+* ```C::difference_type``` if ```C``` has a member type ```difference_type```, 
+* otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a function,
+* otherwise ```std::ptrdiff_t```. 
 
 ## Acknowledgements
 
