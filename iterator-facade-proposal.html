@@ -282,19 +282,19 @@ constexpr bool single_pass = true;</pre>
     
     // dereferences
     constexpr decltype(auto) operator*() const
-      noexcept(noexcept(cursor::access::read(declval&lt;const C&amp;&gt;())))
+      noexcept(noexcept(declval&lt;const C&amp;&gt;().read()))
     constexpr decltype(auto) operator*() noexcept
-      requires <em>see below</em>;
+      requires cursor::is_writable&lt;C&gt;;
     constexpr decltype(auto) operator*() const noexcept
-      requires <em>see below</em>;
+      requires cursor::is_writable&lt;C&gt;;
     constexpr decltype(auto) operator-&gt;() const
-      noexcept(noexcept(cursor::access::arrow(declval&lt;const C&amp;&gt;())))
+      noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
       requires cursor::Arrow&lt;const C&gt;();
          
     // modifiers
     constexpr basic_iterator&amp; operator++() &amp; noexcept;
     constexpr basic_iterator&amp; operator++() &amp;
-      noexcept(noexcept(cursor::access::next(declval&lt;C&amp;&gt;())))
+      noexcept(noexcept(declval&lt;C&amp;&gt;().next()))
       requires cursor::Next&lt;C&gt;();
     constexpr basic_iterator&amp; operator++(int) &amp; noexcept;
     constexpr postfix_increment_result_t operator++(int) &amp;
@@ -304,7 +304,7 @@ constexpr bool single_pass = true;</pre>
              noexcept(++declval&lt;basic_iterator&amp;&gt;()))
       requires cursor::Next&lt;C&gt;();
     constexpr basic_iterator&amp; operator--() &amp;
-      noexcept(noexcept(cursor::access::prev(declval&lt;C&amp;&gt;())))
+      noexcept(noexcept(declval&lt;C&amp;&gt;().prev()))
       requires cursor::Bidirectional&lt;C&gt;();
     constexpr basic_iterator operator--(int) &amp;
       noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
@@ -312,16 +312,16 @@ constexpr bool single_pass = true;</pre>
              noexcept(--declval&lt;basic_iterator&amp;&gt;()))
       requires cursor::Bidirectional&lt;C&gt;();
     constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
-      noexcept(noexcept(cursor::access::advance(declval&lt;C&amp;&gt;(), n)))
+      noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
       requires cursor::RandomAccess&lt;C&gt;();
     constexpr basic_iterator&amp; operator-=(difference_type n) &amp;
-      noexcept(noexcept(cursor::access::advance(declval&lt;C&amp;&gt;(), -n)))
+      noexcept(noexcept(declval&lt;C&amp;&gt;().advance(-n)))
       requires cursor::RandomAccess&lt;C&gt;();  
     friend constexpr basic_iterator
       operator+(const basic_iterator&amp; i, difference_type n)
         noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
              is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
-             noexcept(cursor::access::advance(declval&lt;C&amp;&gt;(), n)))
+             noexcept(declval&lt;C&amp;&gt;().advance(n)))
         requires cursor::RandomAccess&lt;C&gt;();
     friend constexpr basic_iterator
       operator+(difference_type n, const basic_iterator&amp; i)
@@ -436,6 +436,8 @@ constexpr bool single_pass = true;</pre>
 }}}}</code></pre>
 <h4 id="requirements-basic_iterator.require">Requirements [basic_iterator.require]</h4>
 <p>Class template <code>basic_iterator</code> publicly inherits from <code>C::mixin</code> if <code>C</code> defines a type named <code>mixin</code>, otherwise it publicly inherits from <code>basic_mixin&lt;C&gt;</code>.</p>
+<p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
+<p><span style="background-color:lightgrey"><em>Reference is made to 17.5.2.3 because implementations will need to rely on paragraph 3, &quot;An implementation may use any technique that provides equivalent external behavior&quot; since specifications like <code>operator*()</code> &quot;Returns: <code>cur().read()</code> may require some form of indirection in actual implementations to meet requirements.&quot;</em></span></p>
 <h4 id="types-basic_iterator.types">Types [basic_iterator.types]</h4>
 <pre><code>difference_type</code></pre>
 <p><code>difference_type</code> is defined as:</p>
@@ -445,33 +447,31 @@ constexpr bool single_pass = true;</pre>
 <li>otherwise <code>std::ptrdiff_t</code>.</li>
 </ul>
 <h4 id="constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</h4>
+<p><em>TBS</em></p>
 <h4 id="dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</h4>
 <pre><code>constexpr decltype(auto) operator*() const
-  noexcept(noexcept(declval&lt;const C&amp;&gt;().<em>READ</em>()));</code></pre>
+  noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code><em>READ</em>()</code>.</p>
+<p><em>Returns:</em> <code>cur().read()</code>.</p>
 </blockquote>
 <blockquote>
-<p><em>Remarks:</em> <code><em>READ</em>()</code> requires <code>requires(C&amp; c) { c.<em>READ</em>(); }</code>.</p>
+<p><em>Remarks:</em> <code>cur().read()</code> requires <code>requires(C&amp; c) { c.read(); }</code>.</p>
 </blockquote>
 <pre><code>constexpr decltype(auto) operator*() noexcept
-  requires cursor::Writable&lt;const C&gt;();</code></pre>
+  requires cursor::is_writable&lt;C&gt;;</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>reference_t{pos()}</code>.</p>
+<p><em>Returns:</em> <code>reference_t{cur()}</code>.</p>
 </blockquote>
 <pre><code>constexpr decltype(auto) operator*() const noexcept
-  requires cursor::Writable&lt;const C&gt;();;</code></pre>
+  requires cursor::is_writable&lt;C&gt;;</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>const_reference_t{pos()}</code>.</p>
+<p><em>Returns:</em> <code>const_reference_t{cur()}</code>.</p>
 </blockquote>
 <pre><code>constexpr decltype(auto) operator-&gt;() const
-  noexcept(noexcept(<em>ARROW</em>(declval&lt;const C&amp;&gt;())))
+  noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
   requires cursor::Arrow&lt;const C&gt;();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code><em>ARROW</em>()</code>.</p>
-</blockquote>
-<blockquote>
-<p><em>Remarks:</em></p>
+<p><em>Returns:</em> <code>cur().arrow()</code>.</p>
 </blockquote>
 <h4 id="modifiers-basic_iterator.mods">Modifiers [basic_iterator.mods]</h4>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
@@ -504,10 +504,10 @@ constexpr bool single_pass = true;</pre>
  <code>return tmp;</code></p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator--() &amp;
-  noexcept(noexcept(cursor::access::prev(declval&lt;C&amp;&gt;())))
+  noexcept(noexcept(declval&lt;C&amp;&gt;().prev()))
   requires cursor::Bidirectional&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>cursor::access::prev(pos())</code>.</p>
+<p><em>Effects:</em> <code>cur().prev();</code>.</p>
 </blockquote>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
@@ -524,19 +524,19 @@ constexpr bool single_pass = true;</pre>
  <code>return tmp;</code></p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
-  noexcept(noexcept(declval&lt;C&amp;&gt;().<em>ADVANCE</em>(n)))
+  noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
   requires cursor::RandomAccess&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em> <code><em>ADVANCE</em>(-n);</code></p>
+<p><em>Effects:</em> <code>cur().advance(-n)</code>.</p>
 </blockquote>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator-=(difference_type n) &amp;
-  noexcept(noexcept(declval&lt;C&amp;&gt;().<em>ADVANCE</em>(-n)))
+  noexcept(noexcept(declval&lt;C&amp;&gt;().advance(-n)))
   requires cursor::RandomAccess&lt;C&gt;();  </code></pre>
 <blockquote>
-<p><em>Effects:</em> <code><em>ADVANCE</em>(-n);</code></p>
+<p><em>Effects:</em> <code>cur().advance(-n)</code>.</p>
 </blockquote>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
@@ -545,12 +545,12 @@ constexpr bool single_pass = true;</pre>
   operator+(const basic_iterator&amp; i, difference_type n)
     noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
          is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
-         noexcept(declval&lt;C&amp;&gt;().<em>ADVANCE</em>(n)))
+         noexcept(declval&lt;C&amp;&gt;().advance(n)))
     requires cursor::RandomAccess&lt;C&gt;();</code></pre>
 <blockquote>
 <p><em>Effects:</em><br />
  <code>auto tmp = i;</code><br />
- <code>tmp.<em>ADVANCE</em>(n);</code><br />
+ <code>tmp.cur().advance(n);</code><br />
  <code>return tmp;</code></p>
 </blockquote>
 <pre><code>friend constexpr basic_iterator
