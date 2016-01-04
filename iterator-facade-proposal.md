@@ -93,15 +93,13 @@ Iterator adaptors generate new iterator types from existing types.
 
 #### Basic iterators [iterator.basic]
 
-Class template ```basic_iterator``` is an iterator adaptor that iterates over the sequence described by a cursor type. [Namespace ```cursor```](#namespace-cursor) provides the classes, types, concepts, and traits needed to create cursor types.
+Class template ```basic_iterator``` is an iterator adaptor that iterates over the sequence described by a cursor type. [Namespace ```cursor```](#namespace-cursor) provides classes, types, concepts, and traits used to create cursor types.
 
-A cursor ```C``` extends the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin``` that is inherited publicly by ```basic_iterator```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
+A cursor ```C``` may extend the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
 
 [Class template ```basic_mixin```](#iterator-mixin) supports the creation of mixin types.
 
 >[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, ```basic_iterator``` gets: (a) a cursor data member, and, optionally, (b) additional members and constructors. -- end note]
-  
-
 
 #### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
 
@@ -312,57 +310,70 @@ constexpr basic_mixin(T&& t)
 
 #### Class template ```basic_iterator```
 
-Class template ```basic_iterator``` describes an iterator over a sequence provided by a cursor type. 
+Class template ```basic_iterator``` describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence. 
 
 ```
 namespace std { namespace experimental { namespace ranges_v1 { inline namespace v1 {
   
   template <Cursor C>  
   class basic_iterator
-  : public %!{see below}!%
+  : public cursor::mixin_t<C>  // TODO: move mixin_t<> from cursor::access to cursor
   {
     // types
-    using difference_type = %!{see below}!%
+    using difference_type = cursor::difference_type_t<C>;
     
     // constructors, assignments, and moves
     basic_iterator() = default;
     using mixin_t::mixin_t;
     template <ConvertibleTo<C> O>
     constexpr basic_iterator(basic_iterator<O> that)
-      noexcept(%!{see below}!%);
+      noexcept(is_nothrow_constructible<mixin_t, O&&>::value);
     friend constexpr decltype(auto) iter_move(const basic_iterator& i)
-      noexcept(%!{see below}!%)
-      requires cursor::Readable<C>();
+      noexcept(cur().move(i.cur()))
+      requires cursor::Readable<C>() && cursor::Move<C>();
     
     // dereferences
     constexpr decltype(auto) operator*() const
-      noexcept(%!{see below}!%)
-    constexpr decltype(auto) operator*() noexcept;
-    constexpr decltype(auto) operator*() const noexcept;
-    constexpr decltype(auto) operator->() const noexcept(%!{see below}!%)
+      noexcept(noexcept(cursor::access::read(declval<const C&>())))
+    constexpr decltype(auto) operator*() noexcept
+      requires %!{see below}!%;
+    constexpr decltype(auto) operator*() const noexcept
+      requires %!{see below}!%;
+    constexpr decltype(auto) operator->() const
+      noexcept(noexcept(cursor::access::arrow(declval<const C&>())))
       requires cursor::Arrow<const C>();
          
     // modifiers
     constexpr basic_iterator& operator++() & noexcept;
-    constexpr basic_iterator& operator++() & noexcept(%!{see below}!%)
+    constexpr basic_iterator& operator++() &
+      noexcept(noexcept(cursor::access::next(declval<C&>())))
       requires cursor::Next<C>();
     constexpr basic_iterator& operator++(int) & noexcept;
     constexpr postfix_increment_result_t operator++(int) &
-      noexcept(%!{see below}!%)
+      noexcept(is_nothrow_constructible<postfix_increment_result_t,
+        basic_iterator&>::value
+        && is_nothrow_move_constructible<postfix_increment_result_t>::value &&
+             noexcept(++declval<basic_iterator&>()))
       requires cursor::Next<C>();
-    constexpr basic_iterator& operator--() & noexcept(%!{see below}!%)
+    constexpr basic_iterator& operator--() &
+      noexcept(noexcept(cursor::access::prev(declval<C&>())))
       requires cursor::Bidirectional<C>();
-    constexpr basic_iterator operator--(int) & noexcept(%!{see below}!%)
+    constexpr basic_iterator operator--(int) &
+      noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
+             is_nothrow_move_constructible<basic_iterator>::value &&
+             noexcept(--declval<basic_iterator&>()))
       requires cursor::Bidirectional<C>();
     constexpr basic_iterator& operator+=(difference_type n) &
-      noexcept(%!{see below}!%)
+      noexcept(noexcept(cursor::access::advance(declval<C&>(), n)))
       requires cursor::RandomAccess<C>();
     constexpr basic_iterator& operator-=(difference_type n) &
-      noexcept(%!{see below}!%)
+      noexcept(noexcept(cursor::access::advance(declval<C&>(), -n)))
       requires cursor::RandomAccess<C>();  
     friend constexpr basic_iterator
       operator+(const basic_iterator& i, difference_type n)
-        noexcept(%!{see below}!%)
+        noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
+             is_nothrow_move_constructible<basic_iterator>::value &&
+             noexcept(cursor::access::advance(declval<C&>(), n)))
         requires cursor::RandomAccess<C>();
     friend constexpr basic_iterator
       operator+(difference_type n, const basic_iterator& i)
@@ -375,13 +386,29 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
     constexpr decltype(auto) operator[](difference_type n) const
       noexcept(noexcept(*(declval<basic_iterator&>() + n)))
       requires cursor::RandomAccess<C>();
-                   
-    // exposition only
-  private:
-    using mixin_type = %!{publicly inherited type descibed below}!%; 
+```  
+  <span style="background-color:lightgrey"><blockquote style="background-color:lightgrey">*We wish to hide implementation details, but since we wish to utilize the cursor type C that provides ```basic_iterator```'s customization types and functions as a mixin, it becomes a practical impossibility to describe ```basic_iterator``` without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private "exposition only" members.*</blockquote></span>
+```  
+  private:  %!{// all private members are for exposition only}!%    
+    using mixin_t = cursor::mixin_t<C>;
+    using assoc_t = %!{see below}!%;
+    using typename assoc_t::postfix_increment_result_t;
+    using typename assoc_t::reference_t;
+    using typename assoc_t::const_reference_t;
+ 
+    // mixin cursor object access
+    constexpr C& cur() &
+      noexcept(noexcept(declval<mixin_t&>().get()))
+        { return mixin_t::get(); }  // returns iterator's cursor object
+    constexpr const C& cur() const&
+      noexcept(noexcept(declval<const mixin_t&>().get()))
+        { return mixin_t::get(); }  // returns iterator's cursor object
+    constexpr C&& cur() &&
+      noexcept(noexcept(declval<mixin_t&>().get()))
+        { return mixin_t::get(); }  // returns iterator's cursor object
   };
   
-  // basic_iterator non-member functions
+  // basic_iterator nonmember functions
   
   template <class C>
     requires cursor::EqualityComparable<C, C>()
@@ -463,7 +490,10 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
 }}}}
 ```
 
-Class template ```basic_iterator``` shall publicly inherit from ```C::mixin``` if ```C``` defines a type named ```mixin```, otherwise it shall publicly inherit from ```basic_mixin<C>```.
+#### Requirements [basic_iterator.require]
+
+Class template ```basic_iterator``` publicly inherits from ```C::mixin``` if ```C``` defines a type named ```mixin```, otherwise it publicly inherits from ```basic_mixin<C>```. 
+
 
 #### Types [basic_iterator.types]
 
@@ -475,7 +505,151 @@ difference_type
 
 * ```C::difference_type``` if ```C``` has a member type ```difference_type```, 
 * otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a function,
-* otherwise ```std::ptrdiff_t```. 
+* otherwise ```std::ptrdiff_t```.
+
+#### Constructors, assignments, and moves [basic_iterator.cons]
+
+#### Dereferences [basic_iterator.deref]
+
+```
+constexpr decltype(auto) operator*() const
+  noexcept(noexcept(declval<const C&>().%!{READ}!%()));
+```
+>*Returns:* ```%!{READ}!%()```.
+ 
+>*Remarks:* ```%!{READ}!%()``` requires ```requires(C& c) { c.%!{READ}!%(); }```.
+
+```
+constexpr decltype(auto) operator*() noexcept
+  requires cursor::Writable<const C>();
+```
+>*Returns:* ```reference_t{pos()}```.
+ 
+```
+constexpr decltype(auto) operator*() const noexcept
+  requires cursor::Writable<const C>();;
+```
+>*Returns:* ```const_reference_t{pos()}```.  
+ 
+```
+constexpr decltype(auto) operator->() const
+  noexcept(noexcept(%!{ARROW}!%(declval<const C&>())))
+  requires cursor::Arrow<const C>();
+```
+>*Returns:* ```%!{ARROW}!%()```.
+ 
+>*Remarks:* 
+
+#### Modifiers [basic_iterator.mods]
+
+```
+constexpr basic_iterator& operator++() & noexcept;
+```
+>*Returns:* ```*this```.
+
+```
+constexpr basic_iterator& operator++() &
+  noexcept(noexcept(cursor::access::next(declval<C&>())))
+  requires cursor::Next<C>();
+```
+>*Effects:* ```cursor::access::next(pos())```.
+
+>*Returns:* ```*this```.
+
+```
+constexpr basic_iterator& operator++(int) & noexcept;
+```
+>*Returns:* ```*this```.
+
+```
+constexpr postfix_increment_result_t operator++(int) &
+  noexcept(is_nothrow_constructible<postfix_increment_result_t,
+    basic_iterator&>::value
+    && is_nothrow_move_constructible<postfix_increment_result_t>::value &&
+         noexcept(++declval<basic_iterator&>()))
+  requires cursor::Next<C>();
+```
+>*Effects:*
+  ```postfix_increment_result_t tmp(*this);```
+  ```++*this;```
+  ```return tmp;```
+
+```
+constexpr basic_iterator& operator--() &
+  noexcept(noexcept(cursor::access::prev(declval<C&>())))
+  requires cursor::Bidirectional<C>();
+```
+>*Returns:* ```cursor::access::prev(pos())```.
+
+>*Returns:* ```*this```.
+
+```
+constexpr basic_iterator operator--(int) &
+  noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
+         is_nothrow_move_constructible<basic_iterator>::value &&
+         noexcept(--declval<basic_iterator&>()))
+  requires cursor::Bidirectional<C>();
+```
+>*Effects:*
+  ```auto tmp = *this;```
+  ```--*this;```
+  ```return tmp;```
+
+```
+constexpr basic_iterator& operator+=(difference_type n) &
+  noexcept(noexcept(declval<C&>().%!{ADVANCE}!%(n)))
+  requires cursor::RandomAccess<C>();
+```
+>*Effects:* ```%!{ADVANCE}!%(-n);```
+
+>*Returns:* ```*this```.
+
+```
+constexpr basic_iterator& operator-=(difference_type n) &
+  noexcept(noexcept(declval<C&>().%!{ADVANCE}!%(-n)))
+  requires cursor::RandomAccess<C>();  
+```
+>*Effects:* ```%!{ADVANCE}!%(-n);```
+
+>*Returns:* ```*this```.
+
+```
+friend constexpr basic_iterator
+  operator+(const basic_iterator& i, difference_type n)
+    noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
+         is_nothrow_move_constructible<basic_iterator>::value &&
+         noexcept(declval<C&>().%!{ADVANCE}!%(n)))
+    requires cursor::RandomAccess<C>();
+```
+>*Effects:*
+  ```auto tmp = i;```
+  ```tmp.%!{ADVANCE}!%(n);```
+  ```return tmp;```
+
+```
+friend constexpr basic_iterator
+  operator+(difference_type n, const basic_iterator& i)
+    noexcept(noexcept(i + n))
+    requires cursor::RandomAccess<C>();
+```
+>*Returns:* ```i + n```.
+
+```
+friend constexpr basic_iterator
+  operator-(const basic_iterator& i, difference_type n)
+    noexcept(noexcept(i + -n))
+    requires cursor::RandomAccess<C>();    
+```
+>*Returns:* ```i + -n```.
+
+```
+constexpr decltype(auto) operator[](difference_type n) const
+  noexcept(noexcept(*(declval<basic_iterator&>() + n)))
+  requires cursor::RandomAccess<C>();
+```
+>*Returns:* ```*(*this + n)```.
+
+#### ```basic_iterator nonmember``` functions [basic_iterator.nonmem]
 
 ## Acknowledgements
 
