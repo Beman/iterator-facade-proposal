@@ -335,9 +335,12 @@ constexpr bool single_pass = true;</pre>
       noexcept(noexcept(*(declval&lt;basic_iterator&amp;&gt;() + n)))
       requires cursor::RandomAccess&lt;C&gt;();</code></pre>
 <p><span style="background-color:lightgrey"><blockquote style="background-color:lightgrey"><em>We wish to hide implementation details, but since we wish to utilize the cursor type C that provides <code>basic_iterator</code>'s customization types and functions as a mixin, it becomes a practical impossibility to describe <code>basic_iterator</code> without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></blockquote></span></p>
-<pre><code>  private:  <em>// all private members are for exposition only</em>    
+<pre><code>  private:  <em>// all private members are exposition only</em> 
+    // types   
     using mixin_t = cursor::mixin_t&lt;C&gt;;
     using assoc_t = <em>see below</em>;
+   
+    // constructors
     using typename assoc_t::postfix_increment_result_t;
     using typename assoc_t::reference_t;
     using typename assoc_t::const_reference_t;
@@ -345,94 +348,135 @@ constexpr bool single_pass = true;</pre>
     // mixin cursor object access
     constexpr C&amp; cur() &amp;
       noexcept(noexcept(declval&lt;mixin_t&amp;&gt;().get()))
-        { return mixin_t::get(); }  // returns iterator&#39;s cursor object
+        { return mixin_t::get(); }
     constexpr const C&amp; cur() const&amp;
       noexcept(noexcept(declval&lt;const mixin_t&amp;&gt;().get()))
-        { return mixin_t::get(); }  // returns iterator&#39;s cursor object
+        { return mixin_t::get(); }
     constexpr C&amp;&amp; cur() &amp;&amp;
       noexcept(noexcept(declval&lt;mixin_t&amp;&gt;().get()))
-        { return mixin_t::get(); }  // returns iterator&#39;s cursor object
+        { return mixin_t::get(); }
   };
   
+  // basic_iterator nonmember traits
+  
+  template &lt;cursor::Input C&gt;
+  struct iterator_category&lt;basic_iterator&lt;C&gt;&gt;
+    { using type = cursor::category_t&lt;C&gt;; };
+
+  template &lt;cursor::Input C&gt;
+  struct value_type&lt;basic_iterator&lt;C&gt;&gt;
+    { using type = cursor::value_type_t&lt;C&gt;; };
+   
   // basic_iterator nonmember functions
+
+  template &lt;class C&gt;
+    constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
+  STL2_NOEXCEPT_RETURN(                             // TODO
+    cursor::access::cursor(i)
+  )
+
+  template &lt;class C&gt;
+  constexpr const C&amp; get_cursor(const basic_iterator&lt;C&gt;&amp; i)
+  STL2_NOEXCEPT_RETURN(                             // TODO
+    cursor::access::cursor(i)
+  )
+
+  template &lt;class C&gt;
+  constexpr C&amp;&amp; get_cursor(basic_iterator&lt;C&gt;&amp;&amp; i)   // TODO
+  STL2_NOEXCEPT_RETURN(
+    cursor::access::cursor(__stl2::move(i))
+  )
   
   template &lt;class C&gt;
-    requires cursor::EqualityComparable&lt;C, C&gt;()
+    requires cursor::Sentinel&lt;C, C&gt;()
   constexpr bool operator==(
     const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
-    noexcept(<em>see below</em>);
-
-  template &lt;class C, class Other&gt;
-    requires cursor::EqualityComparable&lt;C, Other&gt;()
-  constexpr bool operator==(
-    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)
-    noexcept(<em>see below</em>);
-
-  template &lt;class C, class Other&gt;
-    requires cursor::EqualityComparable&lt;C, Other&gt;()
-  constexpr bool operator==(
-    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    noexcept(static_cast&lt;bool&gt;(get_cursor(lhs).equal(get_cursor(rhs))))
+      { return get_cursor(lhs).equal(get_cursor(rhs)); }
   
-  template &lt;class C&gt;
-    requires cursor::EqualityComparable&lt;C, C&gt;()
-  constexpr bool operator!=(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator==(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(get_cursor(lhs).equal(rhs))
+      { return get_cursor(lhs).equal(rhs); }
 
-  template &lt;class C, class Other&gt;
-    requires cursor::EqualityComparable&lt;C, Other&gt;()
-  constexpr bool operator!=(
-    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)  
-    noexcept(<em>see below</em>);
-
-  template &lt;class C, class Other&gt;
-    requires cursor::EqualityComparable&lt;C, Other&gt;()
-  constexpr bool operator!=(
-    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator==(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(rhs == lhs)
+      { return rhs == lhs; }
 
   template &lt;class C&gt;
-    requires cursor::Distance&lt;C, C&gt;()
-  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    requires cursor::Sentinel&lt;C, C&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(!(lhs == rhs))
+      { return !(lhs == rhs); }
 
-  template &lt;class C, class Other&gt;
-    requires cursor::Distance&lt;C, Other&gt;()
-  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
-    const basic_iterator&lt;C&gt;&amp; lhs, const Other&amp; rhs)  
-    noexcept(<em>see below</em>);
-    
-  template &lt;class C, class Other&gt;
-    requires cursor::Distance&lt;C, Other&gt;()
-  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
-    const Other&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(!get_cursor(lhs).equal(rhs))
+      { return !get_cursor(lhs).equal(rhs); }
+
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator!=(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(rhs != lhs)
+      { return rhs != lhs; }
 
   template &lt;class C&gt;
-    requires cursor::Distance&lt;C, C&gt;()
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))))
+      { return get_cursor(rhs).distance_to(get_cursor(lhs)); }
+
+  template &lt;class C, class S&gt;
+    requires cursor::SizedSentinel&lt;S, C&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(lhs)))
+      { return get_cursor(rhs).distance_to(lhs); }
+      
+  template &lt;class C, class S&gt;
+    requires cursor::SizedSentinel&lt;S, C&gt;()
+  constexpr cursor::access::difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(noexcept(-(rhs - lhs)))
+      { return -(rhs - lhs); }
+
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
   constexpr bool operator&lt;(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(0 &lt; get_cursor(rhs).distance_to(lhs)))
+      { return 0 &lt; get_cursor(rhs).distance_to(lhs); }
 
   template &lt;class C&gt;
-    requires cursor::Distance&lt;C, C&gt;()
+    requires cursor::SizedSentinel&lt;C, C&gt;()
   constexpr bool operator&gt;(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(rhs &lt; lhs))
+      { return rhs &lt; lhs; }
 
   template &lt;class C&gt;
-    requires cursor::Distance&lt;C, C&gt;()
+    requires cursor::SizedSentinel&lt;C, C&gt;()
   constexpr bool operator&lt;=(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(!(rhs &lt; lhs)))
+      { return !(rhs &lt; lhs); } 
 
   template &lt;class C&gt;
-    requires cursor::Distance&lt;C, C&gt;()
+    requires cursor::SizedSentinel&lt;C, C&gt;()
   constexpr bool operator&gt;=(
-    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)  
-    noexcept(<em>see below</em>);
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(!(lhs &lt; rhs)))
+      { return !(lhs &lt; rhs); } 
 }}}}</code></pre>
 <h4 id="requirements-basic_iterator.require">Requirements [basic_iterator.require]</h4>
 <p>Class template <code>basic_iterator</code> publicly inherits from <code>C::mixin</code> if <code>C</code> defines a type named <code>mixin</code>, otherwise it publicly inherits from <code>basic_mixin&lt;C&gt;</code>.</p>

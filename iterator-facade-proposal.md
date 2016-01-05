@@ -389,9 +389,12 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
 ```  
   <span style="background-color:lightgrey"><blockquote style="background-color:lightgrey">*We wish to hide implementation details, but since we wish to utilize the cursor type C that provides ```basic_iterator```'s customization types and functions as a mixin, it becomes a practical impossibility to describe ```basic_iterator``` without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private "exposition only" members.*</blockquote></span>
 ```  
-  private:  %!{// all private members are for exposition only}!%    
+  private:  %!{// all private members are exposition only}!% 
+    // types   
     using mixin_t = cursor::mixin_t<C>;
     using assoc_t = %!{see below}!%;
+   
+    // constructors
     using typename assoc_t::postfix_increment_result_t;
     using typename assoc_t::reference_t;
     using typename assoc_t::const_reference_t;
@@ -399,94 +402,135 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
     // mixin cursor object access
     constexpr C& cur() &
       noexcept(noexcept(declval<mixin_t&>().get()))
-        { return mixin_t::get(); }  // returns iterator's cursor object
+        { return mixin_t::get(); }
     constexpr const C& cur() const&
       noexcept(noexcept(declval<const mixin_t&>().get()))
-        { return mixin_t::get(); }  // returns iterator's cursor object
+        { return mixin_t::get(); }
     constexpr C&& cur() &&
       noexcept(noexcept(declval<mixin_t&>().get()))
-        { return mixin_t::get(); }  // returns iterator's cursor object
+        { return mixin_t::get(); }
   };
   
+  // basic_iterator nonmember traits
+  
+  template <cursor::Input C>
+  struct iterator_category<basic_iterator<C>>
+    { using type = cursor::category_t<C>; };
+
+  template <cursor::Input C>
+  struct value_type<basic_iterator<C>>
+    { using type = cursor::value_type_t<C>; };
+   
   // basic_iterator nonmember functions
+
+  template <class C>
+    constexpr C& get_cursor(basic_iterator<C>& i)
+  STL2_NOEXCEPT_RETURN(                             // TODO
+    cursor::access::cursor(i)
+  )
+
+  template <class C>
+  constexpr const C& get_cursor(const basic_iterator<C>& i)
+  STL2_NOEXCEPT_RETURN(                             // TODO
+    cursor::access::cursor(i)
+  )
+
+  template <class C>
+  constexpr C&& get_cursor(basic_iterator<C>&& i)   // TODO
+  STL2_NOEXCEPT_RETURN(
+    cursor::access::cursor(__stl2::move(i))
+  )
   
   template <class C>
-    requires cursor::EqualityComparable<C, C>()
+    requires cursor::Sentinel<C, C>()
   constexpr bool operator==(
     const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
-    noexcept(%!{see below}!%);
-
-  template <class C, class Other>
-    requires cursor::EqualityComparable<C, Other>()
-  constexpr bool operator==(
-    const basic_iterator<C>& lhs, const Other& rhs)
-    noexcept(%!{see below}!%);
-
-  template <class C, class Other>
-    requires cursor::EqualityComparable<C, Other>()
-  constexpr bool operator==(
-    const Other& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    noexcept(static_cast<bool>(get_cursor(lhs).equal(get_cursor(rhs))))
+      { return get_cursor(lhs).equal(get_cursor(rhs)); }
   
-  template <class C>
-    requires cursor::EqualityComparable<C, C>()
-  constexpr bool operator!=(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+  template <class C, class S>
+    requires cursor::Sentinel<S, C>()
+  constexpr bool operator==(
+    const basic_iterator<C>& lhs, const S& rhs)
+    noexcept(get_cursor(lhs).equal(rhs))
+      { return get_cursor(lhs).equal(rhs); }
 
-  template <class C, class Other>
-    requires cursor::EqualityComparable<C, Other>()
-  constexpr bool operator!=(
-    const basic_iterator<C>& lhs, const Other& rhs)  
-    noexcept(%!{see below}!%);
-
-  template <class C, class Other>
-    requires cursor::EqualityComparable<C, Other>()
-  constexpr bool operator!=(
-    const Other& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+  template <class C, class S>
+    requires cursor::Sentinel<S, C>()
+  constexpr bool operator==(
+    const S& lhs, const basic_iterator<C>& rhs)
+    noexcept(rhs == lhs)
+      { return rhs == lhs; }
 
   template <class C>
-    requires cursor::Distance<C, C>()
-  constexpr cursor::access::difference_type_t<C> operator-(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    requires cursor::Sentinel<C, C>()
+  constexpr bool operator!=(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(!(lhs == rhs))
+      { return !(lhs == rhs); }
 
-  template <class C, class Other>
-    requires cursor::Distance<C, Other>()
-  constexpr cursor::access::difference_type_t<C> operator-(
-    const basic_iterator<C>& lhs, const Other& rhs)  
-    noexcept(%!{see below}!%);
-    
-  template <class C, class Other>
-    requires cursor::Distance<C, Other>()
-  constexpr cursor::access::difference_type_t<C> operator-(
-    const Other& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+  template <class C, class S>
+    requires cursor::Sentinel<S, C>()
+  constexpr bool operator!=(
+    const basic_iterator<C>& lhs, const S& rhs)
+    noexcept(!get_cursor(lhs).equal(rhs))
+      { return !get_cursor(lhs).equal(rhs); }
+
+  template <class C, class S>
+    requires cursor::Sentinel<S, C>()
+  constexpr bool operator!=(
+    const S& lhs, const basic_iterator<C>& rhs)
+    noexcept(rhs != lhs)
+      { return rhs != lhs; }
 
   template <class C>
-    requires cursor::Distance<C, C>()
+    requires cursor::SizedSentinel<C, C>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))))
+      { return get_cursor(rhs).distance_to(get_cursor(lhs)); }
+
+  template <class C, class S>
+    requires cursor::SizedSentinel<S, C>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const S& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(lhs)))
+      { return get_cursor(rhs).distance_to(lhs); }
+      
+  template <class C, class S>
+    requires cursor::SizedSentinel<S, C>()
+  constexpr cursor::access::difference_type_t<C> operator-(
+    const basic_iterator<C>& lhs, const S& rhs)
+    noexcept(noexcept(-(rhs - lhs)))
+      { return -(rhs - lhs); }
+
+  template <class C>
+    requires cursor::SizedSentinel<C, C>()
   constexpr bool operator<(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(0 < get_cursor(rhs).distance_to(lhs)))
+      { return 0 < get_cursor(rhs).distance_to(lhs); }
 
   template <class C>
-    requires cursor::Distance<C, C>()
+    requires cursor::SizedSentinel<C, C>()
   constexpr bool operator>(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(rhs < lhs))
+      { return rhs < lhs; }
 
   template <class C>
-    requires cursor::Distance<C, C>()
+    requires cursor::SizedSentinel<C, C>()
   constexpr bool operator<=(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(!(rhs < lhs)))
+      { return !(rhs < lhs); } 
 
   template <class C>
-    requires cursor::Distance<C, C>()
+    requires cursor::SizedSentinel<C, C>()
   constexpr bool operator>=(
-    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)  
-    noexcept(%!{see below}!%);
+    const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
+    noexcept(noexcept(!(lhs < rhs)))
+      { return !(lhs < rhs); } 
 }}}}
 ```
 
