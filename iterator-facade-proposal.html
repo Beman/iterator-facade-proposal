@@ -26,19 +26,12 @@
 <li><a href="#use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</a></li>
 </ul></li>
 <li><a href="#proposed-wording">Proposed wording</a><ul>
+<li><a href="#basic-iterators-iterators.basic">Basic Iterators [iterators.basic]</a><ul>
 <li><a href="#method-of-description-informative">Method of description (Informative)</a></li>
-<li><a href="#basic-iterators-iterator.basic">Basic iterators [iterator.basic]</a></li>
 <li><a href="#namespace-cursor-namespace.cursor">Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]</a></li>
-<li><a href="#namespace-cursor-synopsis">Namespace cursor synopsis</a></li>
-<li><a href="#namespace-cursor-semantics">Namespace cursor semantics</a></li>
 <li><a href="#class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</a></li>
 <li><a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a></li>
-<li><a href="#requirements-basic_iterator.require">Requirements [basic_iterator.require]</a></li>
-<li><a href="#types-basic_iterator.types">Types [basic_iterator.types]</a></li>
-<li><a href="#constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</a></li>
-<li><a href="#dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</a></li>
-<li><a href="#modifiers-basic_iterator.mods">Modifiers [basic_iterator.mods]</a></li>
-<li><a href="#basic_iterator-nonmember-functions-basic_iterator.nonmem"><code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</a></li>
+</ul></li>
 </ul></li>
 <li><a href="#acknowledgements">Acknowledgements</a></li>
 <li><a href="#references">References</a></li>
@@ -65,6 +58,7 @@
     Casey Carter &lt;....&gt;</td>
 </tr>
 </table>
+<!-- generate-section-numbers=false -->
 <h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
 <p><span style="background-color:lightyellow"><strong><em>This is the &quot;no-access&quot; branch, an experiment to see if removing mention of class <code>access</code> (i.e. considering it an implementation detail) results in a less confusing specification.</em></strong></span></p>
 <p><em>&quot;We are what we pretend to be, so we must be careful about what we pretend to be.&quot; - Kurt Vonnegut</em></p>
@@ -93,28 +87,34 @@
 <h4 id="use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</h4>
 <p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
 <h2 id="proposed-wording">Proposed wording</h2>
+<!-- generate-section-numbers -->
 <p><span style="background-color:lightgrey"><em>Editorial comments are shown in italics with a light grey background.</em></span></p>
 <p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
-<p><span style="background-color:lightgrey"><em>For brevity, clarity, and reduced specification errors, add the following at a location to be determined by the project editor:</em></span></p>
-<h4 id="method-of-description-informative">Method of description (Informative)</h4>
+<p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
+<h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
+<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>]</p>
+<p>[<em>Example:</em></p>
+<p><em>TBS</em></p>
+<p><em>-- end example</em>]</p>
+<p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>.</p>
+<blockquote>
+<p>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, <code>basic_iterator</code> gets: (a) access to the cursor object, and, optionally, (b) additional members and constructors. -- end note]</p>
+</blockquote>
+<p>This sub-clause has three major sub-sections:</p>
+<ul>
+<li><a href="#namespace-cursor">Namespace <code>cursor</code></a> describes cursor types.</li>
+<li><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> describes mixin types.</li>
+<li><a href="#basic_iterator">Class template <code>basic_iterator</code></a> describes <code>basic_iterator</code>.</li>
+</ul>
+<h4 id="method-of-description-informative">24.8.9.1  Method of description (Informative)</h4>
 <p>Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.</p>
 <p>Namespaces with names reserved to the implementation are for the sake of exposition only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.</p>
 <blockquote>
 <p>[Note: This constitutes an &quot;as if&quot; rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]</p>
 </blockquote>
-<p><span style="background-color:lightgrey"><em>Add to 24.8, Iterator adaptors [iterators.predef]:</em></span></p>
-<p>Iterator adaptors generate new iterator types from existing types.</p>
-<p><span style="background-color:lightgrey"><em>Add a new iterator adapter at the end of 24.8, Iterator adaptors [iterators.predef]</em></span></p>
-<h4 id="basic-iterators-iterator.basic">Basic iterators [iterator.basic]</h4>
-<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over the sequence described by a cursor type. <a href="#namespace-cursor">Namespace <code>cursor</code></a> provides classes, types, concepts, and traits used to create cursor types.</p>
-<p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>.</p>
-<p><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> supports the creation of mixin types.</p>
-<blockquote>
-<p>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, <code>basic_iterator</code> gets: (a) a cursor data member, and, optionally, (b) additional members and constructors. -- end note]</p>
-</blockquote>
-<h4 id="namespace-cursor-namespace.cursor">Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]</h4>
+<h4 id="namespace-cursor-namespace.cursor">24.8.9.2  Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]</h4>
 <p>Namespace <code>cursor</code> provides a scope for the class, type, concept, and trait identifiers used to create cursor types.</p>
-<h4 id="namespace-cursor-synopsis">Namespace cursor synopsis</h4>
+<h5 id="namespace-cursor-synopsis">24.8.9.2.1  Namespace cursor synopsis</h5>
 <pre><code>  namespace cursor {
 
     // types
@@ -175,7 +175,7 @@
     template &lt;class C&gt;
       using category_t = typename category&lt;C&gt;::type;
   }  // namespace cursor</code></pre>
-<h4 id="namespace-cursor-semantics">Namespace cursor semantics</h4>
+<h5 id="namespace-cursor-semantics">24.8.9.2.2  Namespace cursor semantics</h5>
 <pre><code>template &lt;class C&gt;
 concept bool Cursor();</code></pre>
 <p><code>Cursor&lt;C&gt;()</code> is satisfied if and only if <code>Semiregular&lt;C&gt;() &amp;&amp; Semiregular&lt;Mx&gt;()</code> is <code>true</code>, where type <code>Mx</code> is deduced by the implementation to be <code>C::mixin</code> if member <code>C::mixin</code> is present, otherwise is deduced to be <code>basic_mixin&lt;C&gt;</code>.</p>
@@ -225,8 +225,8 @@ constexpr bool single_pass = true;</pre>
   template &lt;Destructible T&gt;
   class basic_mixin;</code></pre>
 <p><span style="background-color:lightgrey"><em>Add somewhere:</em></span></p>
-<h4 id="class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
-<p>Class template <code>basic_mixin</code> describes an empty mixin type.</p>
+<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
+<p>Class template <code>basic_mixin</code> describes a mixin type.</p>
 <pre><code>  template &lt;Destructible T&gt;
   class basic_mixin {
   public:
@@ -240,7 +240,7 @@ constexpr bool single_pass = true;</pre>
       noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
       requires MoveConstructible&lt;T&gt;();
   };</code></pre>
-<h5 id="basic_mixin-constructors-mixin.cons"><code>basic_mixin</code> constructors [mixin.cons]</h5>
+<h5 id="basic_mixin-constructors-mixin.cons">24.8.9.3.1  <code>basic_mixin</code> constructors [mixin.cons]</h5>
 <pre><code>constexpr basic_mixin()
   noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
   requires DefaultConstructible&lt;T&gt;();</code></pre>
@@ -259,7 +259,7 @@ constexpr bool single_pass = true;</pre>
 <blockquote>
 <p><em>Effects:</em> Move constructs an object of type <code>basic_mixin</code>.</p>
 </blockquote>
-<h4 id="class-template-basic_iterator">Class template <code>basic_iterator</code></h4>
+<h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
 <pre><code>namespace std { namespace experimental { namespace ranges_v1 { inline namespace v1 {
   
@@ -268,7 +268,7 @@ constexpr bool single_pass = true;</pre>
   : public cursor::mixin_t&lt;C&gt;  // TODO: move mixin_t&lt;&gt; from cursor::access to cursor
   {
     // types
-    using difference_type = cursor::difference_type_t&lt;C&gt;;
+    using difference_type = <em>see below</em>;
     
     // constructors, assignments, and moves
     basic_iterator() = default;
@@ -371,6 +371,8 @@ constexpr bool single_pass = true;</pre>
 
   template &lt;class C&gt;
     constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
+      noexcept()
+        { return i.cur()
   STL2_NOEXCEPT_RETURN(                             // TODO
     cursor::access::cursor(i)
   )
@@ -478,21 +480,21 @@ constexpr bool single_pass = true;</pre>
     noexcept(noexcept(!(lhs &lt; rhs)))
       { return !(lhs &lt; rhs); } 
 }}}}</code></pre>
-<h4 id="requirements-basic_iterator.require">Requirements [basic_iterator.require]</h4>
+<h5 id="requirements-basic_iterator.require">24.8.9.4.1  Requirements [basic_iterator.require]</h5>
 <p>Class template <code>basic_iterator</code> publicly inherits from <code>C::mixin</code> if <code>C</code> defines a type named <code>mixin</code>, otherwise it publicly inherits from <code>basic_mixin&lt;C&gt;</code>.</p>
 <p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
 <p><span style="background-color:lightgrey"><em>Reference is made to 17.5.2.3 because implementations will need to rely on paragraph 3, &quot;An implementation may use any technique that provides equivalent external behavior&quot; since specifications like <code>operator*()</code> &quot;Returns: <code>cur().read()</code> may require some form of indirection in actual implementations to meet requirements.&quot;</em></span></p>
-<h4 id="types-basic_iterator.types">Types [basic_iterator.types]</h4>
-<pre><code>difference_type</code></pre>
+<h5 id="types-basic_iterator.types">24.8.9.4.2  Types [basic_iterator.types]</h5>
+<pre><code>using difference_type = <em>see below</em>;</code></pre>
 <p><code>difference_type</code> is defined as:</p>
 <ul>
 <li><code>C::difference_type</code> if <code>C</code> has a member type <code>difference_type</code>,</li>
-<li>otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a function,</li>
+<li>otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a <code>distance_to</code> member function,</li>
 <li>otherwise <code>std::ptrdiff_t</code>.</li>
 </ul>
-<h4 id="constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</h4>
+<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <p><em>TBS</em></p>
-<h4 id="dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</h4>
+<h5 id="dereferences-basic_iterator.deref">24.8.9.4.4  Dereferences [basic_iterator.deref]</h5>
 <pre><code>constexpr decltype(auto) operator*() const
   noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
 <blockquote>
@@ -517,7 +519,7 @@ constexpr bool single_pass = true;</pre>
 <blockquote>
 <p><em>Returns:</em> <code>cur().arrow()</code>.</p>
 </blockquote>
-<h4 id="modifiers-basic_iterator.mods">Modifiers [basic_iterator.mods]</h4>
+<h5 id="modifiers-basic_iterator.mods">24.8.9.4.5  Modifiers [basic_iterator.mods]</h5>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
@@ -617,7 +619,8 @@ constexpr bool single_pass = true;</pre>
 <blockquote>
 <p><em>Returns:</em> <code>*(*this + n)</code>.</p>
 </blockquote>
-<h4 id="basic_iterator-nonmember-functions-basic_iterator.nonmem"><code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h4>
+<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.6  <code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h5>
+<!-- generate-section-numbers=false -->
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p><em>TBS</em></p>
 <h2 id="references">References</h2>

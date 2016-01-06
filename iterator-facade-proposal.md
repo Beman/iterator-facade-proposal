@@ -19,6 +19,8 @@
 </tr>
 </table>
 
+<!-- generate-section-numbers=false -->
+
 # Iterator Facade Library Proposal for Ranges
 
 <span style="background-color:lightyellow">***This is the "no-access" branch, an experiment to see if removing mention of class ```access``` (i.e. considering it an implementation detail) results in a less confusing specification.***</span>
@@ -71,11 +73,32 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 ## Proposed wording
 
+<!-- generate-section-numbers -->
+
 <span style="background-color:lightgrey">*Editorial comments are shown in italics with a light grey background.*</span>
 
 <span style="background-color:lightgrey">*Proposed wording is relative to the Working Draft, C++ Extensions for Ranges*</span>
 
-<span style="background-color:lightgrey">*For brevity, clarity, and reduced specification errors, add the following at a location to be determined by the project editor:*</span>
+<span style="background-color:lightgrey">*Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:*</span>
+
+### Basic Iterators [iterators.basic]
+
+Class template ```basic_iterator``` is an iterator adaptor that iterates over a sequence provided by a cursor type. [*Note:* ```basic_iterator``` eases creation of conforming iterators because cursors are simpler to create than iterators. *-- end note*]
+
+[*Example:*
+
+ *TBS*
+ 
+ *-- end example*]
+ 
+ A cursor ```C``` may extend the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
+
+>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, ```basic_iterator``` gets: (a) access to the cursor object, and, optionally, (b) additional members and constructors. -- end note]
+
+ This sub-clause has three major sub-sections:
+  * [Namespace ```cursor```](#namespace-cursor) describes cursor types.
+  * [Class template ```basic_mixin```](#iterator-mixin) describes mixin types.
+  * [Class template ```basic_iterator```](#basic_iterator) describes ```basic_iterator```.
 
 #### Method of description (Informative)
 
@@ -85,27 +108,11 @@ Namespaces with names reserved to the implementation are for the sake of exposit
 
 >[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
 
-<span style="background-color:lightgrey">*Add to 24.8, Iterator adaptors [iterators.predef]:*</span>
-
-Iterator adaptors generate new iterator types from existing types.
-
-<span style="background-color:lightgrey">*Add a new iterator adapter at the end of 24.8, Iterator adaptors [iterators.predef]*</span>
-
-#### Basic iterators [iterator.basic]
-
-Class template ```basic_iterator``` is an iterator adaptor that iterates over the sequence described by a cursor type. [Namespace ```cursor```](#namespace-cursor) provides classes, types, concepts, and traits used to create cursor types.
-
-A cursor ```C``` may extend the interface of ```basic_iterator<C>``` by defining a nested mixin type ```C::mixin```. In that way, the author of a cursor can non-intrusively add members and constructors to ```basic_iterator```.
-
-[Class template ```basic_mixin```](#iterator-mixin) supports the creation of mixin types.
-
->[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, ```basic_iterator``` gets: (a) a cursor data member, and, optionally, (b) additional members and constructors. -- end note]
-
 #### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
 
 Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
 
-#### Namespace cursor synopsis
+##### Namespace cursor synopsis
 
 ```
   namespace cursor {
@@ -170,7 +177,7 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
   }  // namespace cursor
 ```
 
-#### Namespace cursor semantics
+##### Namespace cursor semantics
 
 
 ```
@@ -264,7 +271,7 @@ constexpr bool single_pass = true;</pre>
         
 ####  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]
 
-Class template <code>basic_mixin</code> describes an empty mixin type.
+Class template <code>basic_mixin</code> describes a mixin type.
 
 ```
   template <Destructible T>
@@ -320,7 +327,7 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
   : public cursor::mixin_t<C>  // TODO: move mixin_t<> from cursor::access to cursor
   {
     // types
-    using difference_type = cursor::difference_type_t<C>;
+    using difference_type = %!{see below}!%;
     
     // constructors, assignments, and moves
     basic_iterator() = default;
@@ -425,6 +432,8 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
 
   template <class C>
     constexpr C& get_cursor(basic_iterator<C>& i)
+      noexcept()
+        { return i.cur()
   STL2_NOEXCEPT_RETURN(                             // TODO
     cursor::access::cursor(i)
   )
@@ -534,7 +543,7 @@ namespace std { namespace experimental { namespace ranges_v1 { inline namespace 
 }}}}
 ```
 
-#### Requirements [basic_iterator.require]
+##### Requirements [basic_iterator.require]
 
 Class template ```basic_iterator``` publicly inherits from ```C::mixin``` if ```C``` defines a type named ```mixin```, otherwise it publicly inherits from ```basic_mixin<C>```. 
 
@@ -542,23 +551,23 @@ Private members of class ```basic_iterator``` are for exposition only (17.5.2.3 
 
 <span style="background-color:lightgrey">*Reference is made to 17.5.2.3 because implementations will need to rely on paragraph 3, "An implementation may use any technique that provides equivalent external behavior" since specifications like ```operator*()``` "Returns: ```cur().read()``` may require some form of indirection in actual implementations to meet requirements."*</span>
 
-#### Types [basic_iterator.types]
+##### Types [basic_iterator.types]
 
 ```
-difference_type
+using difference_type = %!{see below}!%;
 ```
 
 ```difference_type``` is defined as:
 
 * ```C::difference_type``` if ```C``` has a member type ```difference_type```, 
-* otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a function,
+* otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a ```distance_to``` member function,
 * otherwise ```std::ptrdiff_t```.
 
-#### Constructors, assignments, and moves [basic_iterator.cons]
+##### Constructors, assignments, and moves [basic_iterator.cons]
 
 %!{TBS}!%
 
-#### Dereferences [basic_iterator.deref]
+##### Dereferences [basic_iterator.deref]
 
 ```
 constexpr decltype(auto) operator*() const
@@ -587,7 +596,7 @@ constexpr decltype(auto) operator->() const
 ```
 >*Returns:* ```cur().arrow()```.
 
-#### Modifiers [basic_iterator.mods]
+##### Modifiers [basic_iterator.mods]
 
 ```
 constexpr basic_iterator& operator++() & noexcept;
@@ -696,7 +705,9 @@ constexpr decltype(auto) operator[](difference_type n) const
 ```
 >*Returns:* ```*(*this + n)```.
 
-#### ```basic_iterator nonmember``` functions [basic_iterator.nonmem]
+##### ```basic_iterator nonmember``` functions [basic_iterator.nonmem]
+
+<!-- generate-section-numbers=false -->
 
 ## Acknowledgements
 
