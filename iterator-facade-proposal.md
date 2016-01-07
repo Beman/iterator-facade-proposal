@@ -135,15 +135,13 @@ inline namespace v1 {
     template <class C>
       concept bool Cursor();
     template <class C>
-      concept bool Input()
+      concept bool Input();
     template <class C>
       concept bool Forward();
     template <class C>
-      concept bool Bidirectional()
-        { return Forward<C>() && Prev<C>(); }
+      concept bool Bidirectional();
     template <class C>
-      concept bool RandomAccess()
-        { return Bidirectional<C>() && Advance<C>() && Distance<C, C>(); }
+      concept bool RandomAccess();
     template <class C>
       concept bool Contiguous();
     template <class C>
@@ -220,17 +218,17 @@ template <class C>
   concept bool Forward();
 ```
 >*Returns:* ```Input<C>() && Sentinel<C, C>()```
-  ```&& !access::single_pass<C>::value```.
+  ```&& !single_pass<C>::value```.
 
 ```
 template <class C>
-  concept bool Bidirectional()
+  concept bool Bidirectional();
 ```
 >*Returns:* ```Forward<C>() && Prev<C>()```.
 
 ```
 template <class C>
-  concept bool RandomAccess()
+  concept bool RandomAccess();
 ```
 >*Returns:* ```Bidirectional<C>() && Advance<C>() && Distance<C, C>()```.
 
@@ -238,7 +236,7 @@ template <class C>
 template <class C>
   concept bool Contiguous();
 ```
->*Returns:* ```RandomAccess<C>() && cursor::contiguous<C>::value```.
+>*Returns:* ```RandomAccess<C>() && contiguous<C>::value```.
 
 ```
 template <class C>
