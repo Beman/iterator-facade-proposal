@@ -115,6 +115,10 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
 ##### Namespace cursor synopsis
 
 ```
+namespace std {
+namespace experimental {
+namespace ranges_v1 {
+inline namespace v1 {
   namespace cursor {
 
     // types
@@ -132,7 +136,6 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       concept bool Cursor();
     template <class C>
       concept bool Input()
-        { return Cursor<C>() && Readable<C>() && Next<C>(); }
     template <class C>
       concept bool Forward();
     template <class C>
@@ -159,9 +162,29 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       concept bool Distance();
     template <class C, class O>
       concept bool HasEqual();
+    
+    // single_pass trait
+    template <class> constexpr bool single_pass = false;
+    template <class C>
+      requires requires {
+        typename C::single_pass;
+        requires bool(C::single_pass::value);
+      }
+    constexpr bool single_pass = true;
 
-    // category traits 
-    template <class> struct category {};
+    // contiguous trait 
+    template <class> constexpr bool contiguous = false;
+    template <class C>
+      requires requires {
+        typename C::contiguous;
+        requires bool(C::contiguous::value);
+        requires is_reference<reference_t<C>>::value;
+      }
+    constexpr bool contiguous = true;
+
+    // category trait
+    template <class>
+      struct category {};
     template <Input C>
       struct category<C> { using type = input_iterator_tag; };
     template <Forward C>
@@ -174,7 +197,7 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
       struct category<C> { using type = ext::contiguous_iterator_tag; };
     template <class C>
       using category_t = typename category<C>::type;
-  }  // namespace cursor
+}}}}}
 ```
 
 ##### Namespace cursor semantics
@@ -182,82 +205,93 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
 
 ```
 template <class C>
-concept bool Cursor();
+  concept bool Cursor();
 ```
-```Cursor<C>()``` is satisfied if and only if ```Semiregular<C>() && Semiregular<Mx>()``` is ```true```, where type ```Mx``` is deduced by the implementation to be ```C::mixin``` if member ```C::mixin``` is present, otherwise is deduced to be ```basic_mixin<C>```.
+>*Returns:* ```Semiregular<C>() && Semiregular<mixin_t<C>>()```.
 
 ```
 template <class C>
-concept bool Forward();
+  concept bool Input();
 ```
- 
-```Forward<C>``` is satisfied if and only if ```Input<C>()``` ```&& EqualityComparable<C, C>()``` ```&& !%!{imp}!%::single_pass<C>::value``` where ```single_pass``` is defined as if:
-
-<blockquote>
-<pre>
-template &lt;class&gt;
-constexpr bool single_pass = false;
-template &lt;class C&gt;
-  requires requires {
-    typename C::single_pass;
-    requires bool(C::single_pass::value);
-  }
-constexpr bool single_pass = true;</pre>
-</blockquote>
+>*Returns:* ```Cursor<C>() && Readable<C>() && Next<C>()```.
 
 ```
-    template <class C>
-      concept bool Contiguous();
+template <class C>
+  concept bool Forward();
 ```
-```Contiguous<C>``` is satisfied if and only if ```RandomAccess<C>()```, type ```C::contiguous``` exists, ```C::contiguous::value == true```, and.
+>*Returns:* ```Input<C>() && Sentinel<C, C>()```
+  ```&& !access::single_pass<C>::value```.
 
 ```
-    template <class C>
-      concept bool Readable();
+template <class C>
+  concept bool Bidirectional()
 ```
-```Readable<C>``` is satisfied if and only if
+>*Returns:* ```Forward<C>() && Prev<C>()```.
 
 ```
-    template <class C, class T>
-      concept bool Writable();
+template <class C>
+  concept bool RandomAccess()
 ```
-```Writable<C, T>``` is satisfied if and only if
+>*Returns:* ```Bidirectional<C>() && Advance<C>() && Distance<C, C>()```.
 
 ```
-    template <class C>
-      concept bool Arrow();
+template <class C>
+  concept bool Contiguous();
 ```
-```Arrow<C>``` is satisfied if and only if
+>*Returns:* ```RandomAccess<C>() && cursor::contiguous<C>::value```.
 
 ```
-    template <class C>
-      concept bool Next();
+template <class C>
+  concept bool Readable();
 ```
-```Next<C>``` is satisfied if and only if
+>*Returns:* ```requires(C& c)```
+  ``` { typename value_type_t<remove_cv_t<C>>; c.read(); }```.
 
 ```
-    template <class C>
-      concept bool Prev();
+template <class C, class T>
+  concept bool Writable();
 ```
-```Prev<C>``` is satisfied if and only if
+>*Returns:* ```requires(C& c, T&& t) { c.write(static_cast<T&&>(t)); }```.
 
 ```
-    template <class C>
-      concept bool Advance();
+template <class C>
+  concept bool Arrow();
 ```
-```Advance<C>``` is satisfied if and only if
+>*Returns:* ```requires(C& c) { c.arrow(); }```.
 
 ```
-    template <class C, class O>
-      concept bool Distance();
+template <class C>
+  concept bool Next();
 ```
-```Distance<C>``` is satisfied if and only if
+>*Returns:* ```requires(C& c) { c.next(); }```.
 
 ```
-    template <class C, class O>
-      concept bool HasEqual();
+template <class C>
+  concept bool Prev();
 ```
-```HasEqual<C>``` is satisfied if and only if
+>*Returns:* ```requires(C& c) { c.prev(); }```.
+
+```
+template <class C>
+  concept bool Advance();
+```
+>*Returns:* ```requires(C& c, difference_type_t<C> n) { c.advance(n); }```.
+
+```
+template <class C, class O>
+  concept bool Distance();
+```
+>*Returns:* ```requires(const C& lhs, const Other& rhs)```
+  ```{STL2_EXACT_TYPE_CONSTRAINT```  //TODO
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```(lhs.distance_to(rhs), difference_type_t<C>);}```.
+
+```
+template <class C, class O>
+  concept bool HasEqual();
+```
+>*Returns:* ```requires(const C& lhs, const Other& rhs)```
+  ```{{ lhs.equal(rhs) } -> bool;}```.
+
 
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
 
@@ -320,7 +354,10 @@ constexpr basic_mixin(T&& t)
 Class template ```basic_iterator``` describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence. 
 
 ```
-namespace std { namespace experimental { namespace ranges_v1 { inline namespace v1 {
+namespace std {
+namespace experimental {
+namespace ranges_v1 {
+inline namespace v1 {
   
   template <Cursor C>  
   class basic_iterator
@@ -569,10 +606,10 @@ constexpr basic_iterator& operator++() & noexcept;
 
 ```
 constexpr basic_iterator& operator++() &
-  noexcept(noexcept(cursor::access::next(declval<C&>())))
+  noexcept(noexcept(declval<C&>().next()))
   requires cursor::Next<C>();
 ```
->*Effects:* ```cursor::access::next(pos())```.
+>*Effects:* ```cur().next()```.
 
 >*Returns:* ```*this```.
 
