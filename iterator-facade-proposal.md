@@ -23,8 +23,6 @@
 
 # Iterator Facade Library Proposal for Ranges
 
-<span style="background-color:lightyellow">***This is the "no-access" branch, an experiment to see if removing mention of class ```access``` (i.e. considering it an implementation detail) results in a less confusing specification.***</span>
-
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
 >**Summary:** Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.
@@ -108,11 +106,9 @@ Namespaces with names reserved to the implementation are for the sake of exposit
 
 >[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
 
-#### Namespace cursor [<a name="namespace-cursor">namespace.cursor</a>]
+#### Cursors [cursor.intro]
 
 Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
-
-##### Namespace cursor synopsis
 
 ```
 namespace std {
@@ -123,13 +119,13 @@ inline namespace v1 {
 
     // types
     template <class C>
-      using reference_t = %!{see below}!%;
+      using mixin_t = %!{see below}!%;  // used by concepts, etc
     template <class C>
-      using rvalue_reference_t = %!{see below}!%;
+      using value_type_t = %!{see below}!%; // used by concepts, etc.
     template <class C>
-      using value_type_t = %!{see below}!%;
+      using difference_type_t = %!{see below}!%; // used by concepts, etc.
     template <class C>
-      using difference_type_t = %!{see below}!%;
+      using reference_t = %!{see below}!%;  // used by traits, etc.
       
     // concepts
     template <class C>
@@ -198,8 +194,42 @@ inline namespace v1 {
 }}}}}
 ```
 
-##### Namespace cursor semantics
+##### Types  [cursor.types]
 
+````
+template <class C>
+  using mixin_t = %!{see below}!%;  // used by concepts, etc
+````
+If type ```C::mixin``` is defined then type ```mixin_t``` shall be defined as ```C::mixin``` , otherwise it shall be defined as ```basic_mixin<C>```. 
+
+````
+template <class C>
+  requires %!{see below}!%
+  using value_type_t = %!{see below}!%; // used by concepts, etc.
+````
+The ```requires``` clause is satisfied if ```Same<deduced_value_t<C>::type, decay_t<deduced_value_t<C>::type>>()``` would be satisfied.
+
+Type ```value_type_t``` shall be defined as if defined by ```deduced_value_t<C>::type```.
+
+*Remarks:*  ```template <class C> deduced_value_t;``` is an exposition only type defined as:
+  * ```struct value_type<C> { using type = typename C::value_type; };``` if ```C``` has a member ```value_type```. 
+  * Otherwise, ```struct value_type<C> { using type = decay_t<reference_t<C>>; };``` if ```C``` does not have a member ```value_type``` and satisfies a requirement for ```reference_t<C>```. 
+  * Otherwise, ```struct deduced_value_t {};```.
+   
+
+````
+template <class C>
+  using difference_type_t = %!{see below}!%; // used by concepts, etc.
+````
+
+
+````
+template <class C>
+  using reference_t = %!{see below}!%;  // used by traits, etc.
+````
+
+
+##### Concepts  [cursor.concepts]
 
 ```
 template <class C>
@@ -290,6 +320,9 @@ template <class C, class O>
 >*Returns:* ```requires(const C& lhs, const Other& rhs)```
   ```{{ lhs.equal(rhs) } -> bool;}```.
 
+##### Traits [cursor.traits]
+
+*TBS*
 
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
 
@@ -543,8 +576,6 @@ inline namespace v1 {
 ```
 
 ##### Requirements [basic_iterator.require]
-
-Class template ```basic_iterator``` publicly inherits from ```C::mixin``` if ```C``` defines a type named ```mixin```, otherwise it publicly inherits from ```basic_mixin<C>```. 
 
 Private members of class ```basic_iterator``` are for exposition only (17.5.2.3 Private members [objects.within.classes]).
 
