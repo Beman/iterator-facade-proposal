@@ -9,14 +9,55 @@
   <link rel="stylesheet" href="styles.css" type="text/css" />
 </head>
 <body>
+<div id="TOC">
+<ul>
+<li><a href="#iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</a><ul>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+<li><a href="#introduction">Introduction</a><ul>
+<li><a href="#problem">Problem</a></li>
+<li><a href="#solution">Solution</a></li>
+<li><a href="#proposal">Proposal</a></li>
+<li><a href="#history">History</a></li>
+</ul></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#design-decisions">Design Decisions</a><ul>
+<li><a href="#use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</a></li>
+<li><a href="#base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper">Base the interface on features in the Concepts TS and the Ranges TS working paper</a></li>
+<li><a href="#use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</a></li>
+</ul></li>
+<li><a href="#proposed-wording">Proposed wording</a><ul>
+<li><a href="#basic-iterators-iterators.basic">Basic Iterators [iterators.basic]</a><ul>
+<li><a href="#method-of-description-informative">Method of description (Informative)</a></li>
+<li><a href="#cursors-cursor.intro">Cursors [cursor.intro]</a><ul>
+<li><a href="#type-traits-cursor.types">Type traits [cursor.types]</a></li>
+<li><a href="#concepts-cursor.concepts">Concepts [cursor.concepts]</a></li>
+<li><a href="#traits-cursor.traits">Traits [cursor.traits]</a></li>
+</ul></li>
+<li><a href="#class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</a><ul>
+<li><a href="#basic_mixin-constructors-mixin.cons"><code>basic_mixin</code> constructors [mixin.cons]</a></li>
+</ul></li>
+<li><a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a><ul>
+<li><a href="#requirements-basic_iterator.require">Requirements [basic_iterator.require]</a></li>
+<li><a href="#constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</a></li>
+<li><a href="#dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</a></li>
+<li><a href="#modifiers-basic_iterator.mods">Modifiers [basic_iterator.mods]</a></li>
+<li><a href="#basic_iterator-nonmember-functions-basic_iterator.nonmem"><code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+<li><a href="#references">References</a></li>
+</ul></li>
+</ul>
+</div>
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left">DnnnnR0</td>
+  <td align="left"><span style="background-color:yellow">D0186R0</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left">2015-12-15</td>
+  <td align="left"><span style="background-color:yellow">2016-01-09</span></td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -25,26 +66,28 @@
 <tr>
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
-    Eric Niebler &lt;....&gt;</br>
-    Casey Carter &lt;....&gt;</td>
+  Eric Niebler &lt;<span style="background-color:yellow">???</span>&gt;</br>
+    Casey Carter &lt;<span style="background-color:yellow">???</span>&gt;</td>
 </tr>
 </table>
-<h1 id="iterator-facade-library-proposal">Iterator Facade Library Proposal</h1>
+<!-- generate-section-numbers=false -->
+<h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
+<p><em>&quot;We are what we pretend to be, so we must be careful about what we pretend to be.&quot; - Kurt Vonnegut</em></p>
 <blockquote>
-<p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Public open-source implementation and test suite available. Draft wording provided.</p>
+<p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.</p>
 </blockquote>
 <h2 id="table-of-contents">Table of Contents</h2>
 <p><em>TBS</em></p>
 <h2 id="introduction">Introduction</h2>
 <h3 id="problem">Problem</h3>
-<p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few of core functions, they also require a larger number of subsidiary functions and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary functions or other boilerplate wrong.</p>
+<p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few core functions, they also need subsidiary types, functions, and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary types, functions, or other boilerplate wrong.</p>
 <h3 id="solution">Solution</h3>
 <p>A class template that is given a few implementation functions can generate the facade (i.e. public interface and private implementation) for a fully conforming iterator, including all boilerplate. Boost <code>iterator_facade</code> pioneered this approach and has been in wide use since 2001<sup>[<a href="#1">1</a>]</sup>. It eases writing conforming iterators and has proven less error prone than hand-coded iterators. The generated iterator conforms to an extended set of requirements based on the C++98 iterator requirements. Others, such as Chandler Carruth's LLVM <code>iterator_facade_base</code><sup>[<a href="#2">2</a>]</sup>, have provided similar classes inspired by the Boost library.</p>
 <h3 id="proposal">Proposal</h3>
-<p>This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. A public open-source implementation and test suite is available on GitHub<sup>[<a href="#5">5</a>]</sup>.</p>
+<p>This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. Two open-source implementations with test suites are available on GitHub<sup>[<a href="#5">5</a>][<a href="#6">6</a>]</sup>.</p>
 <p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.</p>
 <h3 id="history">History</h3>
-<p>A 2004 proposal<sup>[<a href="#6">6</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended an iterator update proposal<sup>[<a href="#7">7</a>]</sup> that failed because C++03 without concepts was not rich enough to express the necessary iterator requirements.</p>
+<p>A 2004 proposal<sup>[<a href="#7">7</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended on an iterator update proposal<sup>[<a href="#8">8</a>]</sup> that failed because without concepts the language was not rich enough to express the necessary iterator requirements.</p>
 <h2 id="examples">Examples</h2>
 <p><em>TBS</em></p>
 <h2 id="design-decisions">Design Decisions</h2>
@@ -54,8 +97,706 @@
 <p>This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows an interface specification that ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake.</p>
 <h4 id="use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</h4>
 <p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
-<h2 id="technical-specifications">Technical Specifications</h2>
+<h2 id="proposed-wording">Proposed wording</h2>
+<!-- generate-section-numbers -->
+<p><span style="background-color:lightgrey"><em>Editorial comments are shown in italics with a light grey background.</em></span></p>
+<p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
+<p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
+<h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
+<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>]</p>
+<p>[<em>Example:</em></p>
 <p><em>TBS</em></p>
+<p><em>-- end example</em>]</p>
+<p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>.</p>
+<blockquote>
+<p>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, <code>basic_iterator</code> gets: (a) access to the cursor object, and, optionally, (b) additional members and constructors. -- end note]</p>
+</blockquote>
+<p>This sub-clause has three major sub-sections:</p>
+<ul>
+<li><a href="#namespace-cursor">Namespace <code>cursor</code></a> describes cursor types.</li>
+<li><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> describes mixin types.</li>
+<li><a href="#basic_iterator">Class template <code>basic_iterator</code></a> describes <code>basic_iterator</code>.</li>
+</ul>
+<h4 id="method-of-description-informative">24.8.9.1  Method of description (Informative)</h4>
+<p>Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.</p>
+<p>Namespaces with names reserved to the implementation are for the sake of exposition only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.</p>
+<blockquote>
+<p>[Note: This constitutes an &quot;as if&quot; rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]</p>
+</blockquote>
+<h4 id="cursors-cursor.intro">24.8.9.2  Cursors [cursor.intro]</h4>
+<p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
+<p><span style="background-color:yellow"><em>Should the four type traits be &quot;for exposition only&quot;? They are essentially implementation details that are exposed only because without them exposition becomes much harder to write and understand.</em></span></p>
+<pre><code>namespace std {
+namespace experimental {
+namespace ranges_v1 {
+inline namespace v1 {
+  namespace cursor {
+
+    // type traits
+    template &lt;class C&gt;
+      using mixin_t = <em>see below</em>;
+    template &lt;class C&gt;
+      requires <em>see below</em>
+      using value_type_t = <em>see below</em>;
+    template &lt;class C&gt;
+      using difference_type_t = <em>see below</em>;
+    template &lt;class C&gt;
+      requires
+        requires(const C&amp; c) {{c.read()} -&gt; auto&amp;&amp;;}
+      using reference_t = <em>see below</em>;
+      
+    // concepts
+    template &lt;class C&gt;
+      concept bool Cursor();
+    template &lt;class C&gt;
+      concept bool Input();
+    template &lt;class C&gt;
+      concept bool Forward();
+    template &lt;class C&gt;
+      concept bool Bidirectional();
+    template &lt;class C&gt;
+      concept bool RandomAccess();
+    template &lt;class C&gt;
+      concept bool Contiguous();
+    template &lt;class C&gt;
+      concept bool Readable();
+    template &lt;class C, class T&gt;
+      concept bool Writable();
+    template &lt;class C&gt;
+      concept bool Arrow();
+    template &lt;class C&gt;
+      concept bool Next();
+    template &lt;class C&gt;
+      concept bool Prev();
+    template &lt;class C&gt;
+      concept bool Advance();
+    template &lt;class C, class O&gt;
+      concept bool Distance();
+    template &lt;class C, class O&gt;
+      concept bool HasEqual();
+    
+    // single_pass trait
+    template &lt;class&gt; constexpr bool single_pass = false;
+    template &lt;class C&gt;
+      requires requires {
+        typename C::single_pass;
+        requires bool(C::single_pass::value);
+      }
+    constexpr bool single_pass = true;
+
+    // contiguous trait 
+    template &lt;class&gt; constexpr bool contiguous = false;
+    template &lt;class C&gt;
+      requires requires {
+        typename C::contiguous;
+        requires bool(C::contiguous::value);
+        requires is_reference&lt;reference_t&lt;C&gt;&gt;::value;
+      }
+    constexpr bool contiguous = true;
+
+    // category trait
+    template &lt;class&gt;
+      struct category {};
+    template &lt;Input C&gt;
+      struct category&lt;C&gt; { using type = input_iterator_tag; };
+    template &lt;Forward C&gt;
+      struct category&lt;C&gt; { using type = forward_iterator_tag; };
+    template &lt;Bidirectional C&gt;
+      struct category&lt;C&gt; { using type = bidirectional_iterator_tag; };
+    template &lt;RandomAccess C&gt;
+      struct category&lt;C&gt; { using type = random_access_iterator_tag; };
+    template &lt;Contiguous C&gt;
+      struct category&lt;C&gt; { using type = ext::contiguous_iterator_tag; };
+    template &lt;class C&gt;
+      using category_t = typename category&lt;C&gt;::type;
+}}}}}</code></pre>
+<h5 id="type-traits-cursor.types">24.8.9.2.1  Type traits [cursor.types]</h5>
+<p>These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.</p>
+<pre><code>template &lt;class C&gt;
+  using mixin_t = <em>see below</em>;  // used by concepts, etc</code></pre>
+<p>Type <code>mixin_t</code> is defined as <code>C::mixin</code> if type <code>C::mixin</code> is defined. Otherwise it is defined as <code>basic_mixin&lt;C&gt;</code>.</p>
+<pre><code>template &lt;class C&gt;
+  requires <em>see below</em>
+  using value_type_t = <em>see below</em>; // used by concepts, etc.</code></pre>
+<p>The <code>requires</code> clause is satisfied if and only if <code>Same&lt;deduced_value_t&lt;C&gt;::type, decay_t&lt;deduced_value_t&lt;C&gt;::type&gt;&gt;()</code> would be satisfied.</p>
+<p>Type <code>value_type_t</code> is defined as <code>deduced_value_t&lt;C&gt;::type</code>.</p>
+<p><em>Remarks:</em> <code>template &lt;class C&gt; deduced_value_t;</code> is an exposition only type defined as:</p>
+<ul>
+<li><code>struct value_type&lt;C&gt; {using type = typename C::value_type;};</code> if <code>C</code> has a member <code>value_type</code>,</li>
+<li>Otherwise <code>struct value_type&lt;C&gt; {using type = decay_t&lt;reference_t&lt;C&gt;&gt;;};</code> if <code>C</code> does not have a member <code>value_type</code> and satisfies a requirement for <code>reference_t&lt;C&gt;</code>.</li>
+<li>Otherwise <code>struct deduced_value_t {};</code>.</li>
+</ul>
+<pre><code>template &lt;class C&gt;
+  using difference_type_t = <em>see below</em>; // used by concepts, etc.</code></pre>
+<p>Type <code>difference_type_t</code> is defined as:</p>
+<ul>
+<li><code>C::difference_type</code> if <code>C</code> has a member <code>difference_type</code>,</li>
+<li>Otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a <code>distance_to</code> member function,</li>
+<li>Otherwise <code>std::ptrdiff_t</code>.</li>
+</ul>
+<pre><code>template &lt;class C&gt;
+  requires
+    requires(const C&amp; c) {{c.read()} -&gt; auto&amp;&amp;;}
+  using reference_t = <em>see below</em>;  // used by traits, etc.</code></pre>
+<p>Type <code>reference_t</code> is defined as <code>decltype(declval&lt;const C&amp;&gt;().read())</code>.</p>
+<h5 id="concepts-cursor.concepts">24.8.9.2.2  Concepts [cursor.concepts]</h5>
+<pre><code>template &lt;class C&gt;
+  concept bool Cursor();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Semiregular&lt;C&gt;() &amp;&amp; Semiregular&lt;mixin_t&lt;C&gt;&gt;()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Input();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Cursor&lt;C&gt;() &amp;&amp; Readable&lt;C&gt;() &amp;&amp; Next&lt;C&gt;()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Forward();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Input&lt;C&gt;() &amp;&amp; Sentinel&lt;C, C&gt;()</code><br />
+ <code>&amp;&amp; !single_pass&lt;C&gt;::value</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Bidirectional();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Forward&lt;C&gt;() &amp;&amp; Prev&lt;C&gt;()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool RandomAccess();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Bidirectional&lt;C&gt;() &amp;&amp; Advance&lt;C&gt;() &amp;&amp; Distance&lt;C, C&gt;()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Contiguous();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>RandomAccess&lt;C&gt;() &amp;&amp; contiguous&lt;C&gt;::value</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Readable();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c)</code><br />
+ <code>{ typename value_type_t&lt;remove_cv_t&lt;C&gt;&gt;; c.read(); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class T&gt;
+  concept bool Writable();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c, T&amp;&amp; t) { c.write(static_cast&lt;T&amp;&amp;&gt;(t)); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Arrow();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c) { c.arrow(); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Next();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c) { c.next(); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Prev();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c) { c.prev(); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  concept bool Advance();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(C&amp; c, difference_type_t&lt;C&gt; n) { c.advance(n); }</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class O&gt;
+  concept bool Distance();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
+ <code>{STL2_EXACT_TYPE_CONSTRAINT</code> //TODO<br />
+       <code>(lhs.distance_to(rhs), difference_type_t&lt;C&gt;);}</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class O&gt;
+  concept bool HasEqual();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
+ <code>{{ lhs.equal(rhs) } -&gt; bool;}</code>.</p>
+</blockquote>
+<h5 id="traits-cursor.traits">24.8.9.2.3  Traits [cursor.traits]</h5>
+<p><em>TBS</em></p>
+<p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis] or some other synopsis:</em></span></p>
+<pre><code>  // basic_mixin
+  template &lt;Destructible T&gt;
+  class basic_mixin;</code></pre>
+<p><span style="background-color:lightgrey"><em>Add somewhere:</em></span></p>
+<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
+<p>Class template <code>basic_mixin</code> describes a mixin type.</p>
+<pre><code>  template &lt;Destructible T&gt;
+  class basic_mixin {
+  public:
+    constexpr basic_mixin()
+      noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
+      requires DefaultConstructible&lt;T&gt;();
+    constexpr basic_mixin(const T&amp; t)
+      noexcept(is_nothrow_copy_constructible&lt;T&gt;::value)
+      requires CopyConstructible&lt;T&gt;();
+    constexpr basic_mixin(T&amp;&amp; t)
+      noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
+      requires MoveConstructible&lt;T&gt;();
+  };</code></pre>
+<h5 id="basic_mixin-constructors-mixin.cons">24.8.9.3.1  <code>basic_mixin</code> constructors [mixin.cons]</h5>
+<pre><code>constexpr basic_mixin()
+  noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
+  requires DefaultConstructible&lt;T&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> Default constructs an object of type <code>basic_mixin</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_mixin(const T&amp; t)
+  noexcept(is_nothrow_copy_constructible&lt;T&gt;::value)
+  requires CopyConstructible&lt;T&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> Copy constructs an object of type <code>basic_mixin</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_mixin(T&amp;&amp; t)
+  noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
+  requires MoveConstructible&lt;T&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> Move constructs an object of type <code>basic_mixin</code>.</p>
+</blockquote>
+<h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
+<p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
+<pre><code>namespace std {
+namespace experimental {
+namespace ranges_v1 {
+inline namespace v1 {
+  
+  template &lt;Cursor C&gt;  
+  class basic_iterator
+    : public cursor::mixin_t&lt;C&gt;
+  {
+    // types
+    using difference_type = cursor::difference_type_t&lt;C&gt;;
+    
+    // constructors, assignments, and moves
+    basic_iterator() = default;
+    using mixin_t::mixin_t;
+    template &lt;ConvertibleTo&lt;C&gt; O&gt;
+    constexpr basic_iterator(basic_iterator&lt;O&gt; that)
+      noexcept(is_nothrow_constructible&lt;mixin_t, O&amp;&amp;&gt;::value);
+    friend constexpr decltype(auto) iter_move(const basic_iterator&amp; i)
+      noexcept(cur().move(i.cur()))
+      requires cursor::Readable&lt;C&gt;() &amp;&amp; cursor::Move&lt;C&gt;();
+    
+    // dereferences
+    constexpr decltype(auto) operator*() const
+      noexcept(noexcept(declval&lt;const C&amp;&gt;().read()))
+    constexpr decltype(auto) operator*() noexcept
+      requires cursor::is_writable&lt;C&gt;;
+    constexpr decltype(auto) operator*() const noexcept
+      requires cursor::is_writable&lt;C&gt;;
+    constexpr decltype(auto) operator-&gt;() const
+      noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
+      requires cursor::Arrow&lt;const C&gt;();
+         
+    // modifiers
+    constexpr basic_iterator&amp; operator++() &amp; noexcept;
+    constexpr basic_iterator&amp; operator++() &amp;
+      noexcept(noexcept(declval&lt;C&amp;&gt;().next()))
+      requires cursor::Next&lt;C&gt;();
+    constexpr basic_iterator&amp; operator++(int) &amp; noexcept;
+    constexpr postfix_increment_result_t operator++(int) &amp;
+      noexcept(is_nothrow_constructible&lt;postfix_increment_result_t,
+        basic_iterator&amp;&gt;::value
+        &amp;&amp; is_nothrow_move_constructible&lt;postfix_increment_result_t&gt;::value &amp;&amp;
+             noexcept(++declval&lt;basic_iterator&amp;&gt;()))
+      requires cursor::Next&lt;C&gt;();
+    constexpr basic_iterator&amp; operator--() &amp;
+      noexcept(noexcept(declval&lt;C&amp;&gt;().prev()))
+      requires cursor::Bidirectional&lt;C&gt;();
+    constexpr basic_iterator operator--(int) &amp;
+      noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+             is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+             noexcept(--declval&lt;basic_iterator&amp;&gt;()))
+      requires cursor::Bidirectional&lt;C&gt;();
+    constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
+      noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
+      requires cursor::RandomAccess&lt;C&gt;();
+    constexpr basic_iterator&amp; operator-=(difference_type n) &amp;
+      noexcept(noexcept(declval&lt;C&amp;&gt;().advance(-n)))
+      requires cursor::RandomAccess&lt;C&gt;();  
+    friend constexpr basic_iterator
+      operator+(const basic_iterator&amp; i, difference_type n)
+        noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+             is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+             noexcept(declval&lt;C&amp;&gt;().advance(n)))
+        requires cursor::RandomAccess&lt;C&gt;();
+    friend constexpr basic_iterator
+      operator+(difference_type n, const basic_iterator&amp; i)
+        noexcept(noexcept(i + n))
+        requires cursor::RandomAccess&lt;C&gt;();
+    friend constexpr basic_iterator
+      operator-(const basic_iterator&amp; i, difference_type n)
+        noexcept(noexcept(i + -n))
+        requires cursor::RandomAccess&lt;C&gt;();    
+    constexpr decltype(auto) operator[](difference_type n) const
+      noexcept(noexcept(*(declval&lt;basic_iterator&amp;&gt;() + n)))
+      requires cursor::RandomAccess&lt;C&gt;();
+  private:  <em>// all private members are exposition only</em> 
+    // types   
+    using mixin_t = cursor::mixin_t&lt;C&gt;;
+    using assoc_t = <em>see below</em>;
+   
+    // constructors
+    using typename assoc_t::postfix_increment_result_t;
+    using typename assoc_t::reference_t;
+    using typename assoc_t::const_reference_t;
+ 
+    // mixin cursor object access
+    constexpr C&amp; cur() &amp;
+      noexcept(noexcept(declval&lt;mixin_t&amp;&gt;().get()))
+        { return mixin_t::get(); }
+    constexpr const C&amp; cur() const&amp;
+      noexcept(noexcept(declval&lt;const mixin_t&amp;&gt;().get()))
+        { return mixin_t::get(); }
+    constexpr C&amp;&amp; cur() &amp;&amp;
+      noexcept(noexcept(declval&lt;mixin_t&amp;&gt;().get()))
+        { return mixin_t::get(); }
+  };
+  
+  // basic_iterator nonmember traits
+  
+  template &lt;cursor::Input C&gt;
+  struct iterator_category&lt;basic_iterator&lt;C&gt;&gt;
+    { using type = cursor::category_t&lt;C&gt;; };
+
+  template &lt;cursor::Input C&gt;
+  struct value_type&lt;basic_iterator&lt;C&gt;&gt;
+    { using type = cursor::value_type_t&lt;C&gt;; };
+   
+  // basic_iterator nonmember functions
+
+  template &lt;class C&gt;
+    constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
+      noexcept(noexcept(i.cur()));
+  template &lt;class C&gt;
+    constexpr const C&amp; get_cursor(const basic_iterator&lt;C&gt;&amp; i)
+      noexcept(noexcept(i.cur()));
+  template &lt;class C&gt;
+    constexpr C&amp;&amp; get_cursor(basic_iterator&lt;C&gt;&amp;&amp; i)
+      noexcept(noexcept(i.cur()));
+  template &lt;class C&gt;
+    requires cursor::Sentinel&lt;C, C&gt;()
+  constexpr bool operator==(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(static_cast&lt;bool&gt;(get_cursor(lhs).equal(get_cursor(rhs))));
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator==(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(get_cursor(lhs).equal(rhs));
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator==(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(rhs == lhs);
+  template &lt;class C&gt;
+    requires cursor::Sentinel&lt;C, C&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(!(lhs == rhs));
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator!=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(!get_cursor(lhs).equal(rhs));
+  template &lt;class C, class S&gt;
+    requires cursor::Sentinel&lt;S, C&gt;()
+  constexpr bool operator!=(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(rhs != lhs);
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))));
+  template &lt;class C, class S&gt;
+    requires cursor::SizedSentinel&lt;S, C&gt;()
+  constexpr difference_type_t&lt;C&gt; operator-(
+    const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(get_cursor(rhs).distance_to(lhs)));
+  template &lt;class C, class S&gt;
+    requires cursor::SizedSentinel&lt;S, C&gt;()
+  constexpr difference_type_t&lt;C&gt; operator-(
+    const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+    noexcept(noexcept(-(rhs - lhs)));
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr bool operator&lt;(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(0 &lt; get_cursor(rhs).distance_to(lhs)));
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr bool operator&gt;(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(rhs &lt; lhs));
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr bool operator&lt;=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(!(rhs &lt; lhs)));
+  template &lt;class C&gt;
+    requires cursor::SizedSentinel&lt;C, C&gt;()
+  constexpr bool operator&gt;=(
+    const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+    noexcept(noexcept(!(lhs &lt; rhs)));
+}}}}</code></pre>
+<h5 id="requirements-basic_iterator.require">24.8.9.4.1  Requirements [basic_iterator.require]</h5>
+<p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
+<p>span style=&quot;background-color:yellow&quot;&gt;<em>We wish to hide implementation details, but it becomes a practical impossibility to describe <code>basic_iterator</code> without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></span></p>
+<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.2  Constructors, assignments, and moves [basic_iterator.cons]</h5>
+<p><em>TBS</em></p>
+<h5 id="dereferences-basic_iterator.deref">24.8.9.4.3  Dereferences [basic_iterator.deref]</h5>
+<pre><code>constexpr decltype(auto) operator*() const
+  noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>cur().read()</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Remarks:</em> <code>cur().read()</code> requires <code>requires(C&amp; c) { c.read(); }</code>.</p>
+</blockquote>
+<pre><code>constexpr decltype(auto) operator*() noexcept
+  requires cursor::is_writable&lt;C&gt;;</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>reference_t{cur()}</code>.</p>
+</blockquote>
+<pre><code>constexpr decltype(auto) operator*() const noexcept
+  requires cursor::is_writable&lt;C&gt;;</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>const_reference_t{cur()}</code>.</p>
+</blockquote>
+<pre><code>constexpr decltype(auto) operator-&gt;() const
+  noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
+  requires cursor::Arrow&lt;const C&gt;();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>cur().arrow()</code>.</p>
+</blockquote>
+<h5 id="modifiers-basic_iterator.mods">24.8.9.4.4  Modifiers [basic_iterator.mods]</h5>
+<pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_iterator&amp; operator++() &amp;
+  noexcept(noexcept(declval&lt;C&amp;&gt;().next()))
+  requires cursor::Next&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> <code>cur().next()</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_iterator&amp; operator++(int) &amp; noexcept;</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>constexpr postfix_increment_result_t operator++(int) &amp;
+  noexcept(is_nothrow_constructible&lt;postfix_increment_result_t,
+    basic_iterator&amp;&gt;::value
+    &amp;&amp; is_nothrow_move_constructible&lt;postfix_increment_result_t&gt;::value &amp;&amp;
+         noexcept(++declval&lt;basic_iterator&amp;&gt;()))
+  requires cursor::Next&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em><br />
+ <code>postfix_increment_result_t tmp(*this);</code><br />
+ <code>++*this;</code><br />
+ <code>return tmp;</code></p>
+</blockquote>
+<pre><code>constexpr basic_iterator&amp; operator--() &amp;
+  noexcept(noexcept(declval&lt;C&amp;&gt;().prev()))
+  requires cursor::Bidirectional&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> <code>cur().prev();</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_iterator operator--(int) &amp;
+  noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+         is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+         noexcept(--declval&lt;basic_iterator&amp;&gt;()))
+  requires cursor::Bidirectional&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em><br />
+ <code>auto tmp = *this;</code><br />
+ <code>--*this;</code><br />
+ <code>return tmp;</code></p>
+</blockquote>
+<pre><code>constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
+  noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
+  requires cursor::RandomAccess&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em> <code>cur().advance(-n)</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>constexpr basic_iterator&amp; operator-=(difference_type n) &amp;
+  noexcept(noexcept(declval&lt;C&amp;&gt;().advance(-n)))
+  requires cursor::RandomAccess&lt;C&gt;();  </code></pre>
+<blockquote>
+<p><em>Effects:</em> <code>cur().advance(-n)</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<pre><code>friend constexpr basic_iterator
+  operator+(const basic_iterator&amp; i, difference_type n)
+    noexcept(is_nothrow_copy_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+         is_nothrow_move_constructible&lt;basic_iterator&gt;::value &amp;&amp;
+         noexcept(declval&lt;C&amp;&gt;().advance(n)))
+    requires cursor::RandomAccess&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Effects:</em><br />
+ <code>auto tmp = i;</code><br />
+ <code>tmp.cur().advance(n);</code><br />
+ <code>return tmp;</code></p>
+</blockquote>
+<pre><code>friend constexpr basic_iterator
+  operator+(difference_type n, const basic_iterator&amp; i)
+    noexcept(noexcept(i + n))
+    requires cursor::RandomAccess&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>i + n</code>.</p>
+</blockquote>
+<pre><code>friend constexpr basic_iterator
+  operator-(const basic_iterator&amp; i, difference_type n)
+    noexcept(noexcept(i + -n))
+    requires cursor::RandomAccess&lt;C&gt;();    </code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>i + -n</code>.</p>
+</blockquote>
+<pre><code>constexpr decltype(auto) operator[](difference_type n) const
+  noexcept(noexcept(*(declval&lt;basic_iterator&amp;&gt;() + n)))
+  requires cursor::RandomAccess&lt;C&gt;();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>*(*this + n)</code>.</p>
+</blockquote>
+<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.5  <code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h5>
+<pre><code>template &lt;class C&gt;
+  constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
+    noexcept(noexcept(i.cur()))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>i.cur()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  constexpr const C&amp; get_cursor(const basic_iterator&lt;C&gt;&amp; i)
+    noexcept(noexcept(i.cur()))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>i.cur()</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  constexpr C&amp;&amp; get_cursor(basic_iterator&lt;C&gt;&amp;&amp; i)
+    noexcept(noexcept(i.cur()))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>std::move(i.cur())</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::Sentinel&lt;C, C&gt;()
+constexpr bool operator==(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(static_cast&lt;bool&gt;(get_cursor(lhs).equal(get_cursor(rhs))))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>get_cursor(lhs).equal(get_cursor(rhs))</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::Sentinel&lt;S, C&gt;()
+constexpr bool operator==(
+  const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+  noexcept(noexcept(get_cursor(lhs).equal(rhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>get_cursor(lhs).equal(rhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::Sentinel&lt;S, C&gt;()
+constexpr bool operator==(
+  const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(rhs == lhs))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>rhs == lhs</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::Sentinel&lt;C, C&gt;()
+constexpr bool operator!=(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(!(lhs == rhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>!(lhs == rhs</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::Sentinel&lt;S, C&gt;()
+constexpr bool operator!=(
+  const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+  noexcept(noexcept(!get_cursor(lhs).equal(rhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>!get_cursor(lhs).equal(rhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::Sentinel&lt;S, C&gt;()
+constexpr bool operator!=(
+  const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(rhs != lhs))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>rhs != lhs</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::SizedSentinel&lt;C, C&gt;()
+constexpr cursor::difference_type_t&lt;C&gt; operator-(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>get_cursor(rhs).distance_to(get_cursor(lhs))</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::SizedSentinel&lt;S, C&gt;()
+constexpr cursor::difference_type_t&lt;C&gt; operator-(
+  const S&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(get_cursor(rhs).distance_to(lhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>get_cursor(rhs).distance_to(lhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class S&gt;
+  requires cursor::SizedSentinel&lt;S, C&gt;()
+constexpr cursor::difference_type_t&lt;C&gt; operator-(
+  const basic_iterator&lt;C&gt;&amp; lhs, const S&amp; rhs)
+  noexcept(noexcept(-(rhs - lhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>-(rhs - lhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::SizedSentinel&lt;C, C&gt;()
+constexpr bool operator&lt;(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(0 &lt; get_cursor(rhs).distance_to(lhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>0 &lt; get_cursor(rhs).distance_to(lhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::SizedSentinel&lt;C, C&gt;()
+constexpr bool operator&gt;(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(rhs &lt; lhs))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>rhs &lt; lhs</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::SizedSentinel&lt;C, C&gt;()
+constexpr bool operator&lt;=(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(!(rhs &lt; lhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>!(rhs &lt; lhs)</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C&gt;
+  requires cursor::SizedSentinel&lt;C, C&gt;()
+constexpr bool operator&gt;=(
+  const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
+  noexcept(noexcept(!(lhs &lt; rhs)))</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>!(lhs &lt; rhs)</code>.</p>
+</blockquote>
+<!-- generate-section-numbers=false -->
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p><em>TBS</em></p>
 <h2 id="references">References</h2>
@@ -63,9 +804,10 @@
 <p>[<a name="2">2</a>] Chandler Carruth, <a href="https://github.com/llvm-mirror/llvm/blob/master/include/llvm/ADT/iterator.h">LLVM <code>iterator_facade_base</code> iterator.h</a>, 2014.</p>
 <p>[<a name="3">3</a>] Andrew Sutton, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4553.pdf">N4553, Working Draft, C++ extensions for Concepts</a>, 2015.</p>
 <p>[<a name="4">4</a>] Eric Niebler, Casey Carter, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf">N4650, Working Draft, C++ Extensions for Ranges</a>, 2015.</p>
-<p>[<a name="5">5</a>] Eric Niebler, Casey Carter, <a href="https://github.com/ericniebler/range-v3">Experimental range library for C++11/14/17</a>, 2015.</p>
-<p>[<a name="6">6</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html">N1641, Iterator Facade and Adaptor</a>, 2004.</p>
-<p>[<a name="7">7</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html">N1640, New Iterator Concepts</a>, 2004.</p>
+<p>[<a name="5">5</a>] Eric Niebler, Casey Carter, <a href="https://github.com/ericniebler/range-v3">Experimental range library for C++11/14/17</a>, 2015. Requires a C++14 compiler. Simulates concepts with macros and templates.</p>
+<p>[<a name="6">6</a>] Casey Carter, Eric Niebler, <a href="https://github.com/CaseyCarter/cmcstl2">An implementation of C++ Extensions for Ranges</a>, 2015. Requires a C++14 compiler supporting concepts (e.g. GCC trunk).</p>
+<p>[<a name="7">7</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1641.html">N1641, Iterator Facade and Adaptor</a>, 2004.</p>
+<p>[<a name="8">8</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1640.html">N1640, New Iterator Concepts</a>, 2004.</p>
 <hr />
 </body>
 </html>
