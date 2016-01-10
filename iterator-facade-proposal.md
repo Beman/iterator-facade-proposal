@@ -310,8 +310,7 @@ template <class C, class O>
   concept bool Distance();
 ```
 >*Returns:* ```requires(const C& lhs, const Other& rhs)```
-  ```{STL2_EXACT_TYPE_CONSTRAINT```  //TODO
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```(lhs.distance_to(rhs), difference_type_t<C>);}```.
+  ```{{ lhs.distance_to(rhs) } -> Same<difference_type_t<C>>; }```.
 
 ```
 template <class C, class O>

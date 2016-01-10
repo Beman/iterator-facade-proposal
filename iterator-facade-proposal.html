@@ -296,7 +296,7 @@ inline namespace v1 {
 <pre><code>template &lt;class C, class O&gt;
   concept bool Distance();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br /> <code>{STL2_EXACT_TYPE_CONSTRAINT</code> //TODO<br />       <code>(lhs.distance_to(rhs), difference_type_t&lt;C&gt;);}</code>.</p>
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br /> <code>{{ lhs.distance_to(rhs) } -&gt; Same&lt;difference_type_t&lt;C&gt;&gt;; }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C, class O&gt;
   concept bool HasEqual();</code></pre>
