@@ -68,42 +68,48 @@
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
     Eric Niebler &lt;....&gt;</br>
-    Casey Carter &lt;....&gt;</td>
+    Casey Carter &lt;casey at carter dot net&gt;</td>
 </tr>
 </table>
+
+
 <!-- generate-section-numbers=false -->
-<h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
+
+
+<h1 id="iterator-facade-library-proposal-for-ranges"><a href="#iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</a></h1>
 <p><em>&quot;We are what we pretend to be, so we must be careful about what we pretend to be.&quot; - Kurt Vonnegut</em></p>
 <blockquote>
 <p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.</p>
 </blockquote>
-<h2 id="table-of-contents">Table of Contents</h2>
+<h2 id="table-of-contents"><a href="#table-of-contents">Table of Contents</a></h2>
 <p><em>TBS</em></p>
-<h2 id="introduction">Introduction</h2>
-<h3 id="problem">Problem</h3>
+<h2 id="introduction"><a href="#introduction">Introduction</a></h2>
+<h3 id="problem"><a href="#problem">Problem</a></h3>
 <p>Iterators that conform to the requirements of the C++ standard library are tedious to write and difficult to write correctly. They are tedious to write because although they need only a few core functions, they also need subsidiary types, functions, and other boilerplate. Conforming iterators are difficult to write correctly because each iterator category has a subtly differing set of requirements, making it all too easy to get subsidiary types, functions, or other boilerplate wrong.</p>
-<h3 id="solution">Solution</h3>
+<h3 id="solution"><a href="#solution">Solution</a></h3>
 <p>A class template that is given a few implementation functions can generate the facade (i.e. public interface and private implementation) for a fully conforming iterator, including all boilerplate. Boost <code>iterator_facade</code> pioneered this approach and has been in wide use since 2001<sup>[<a href="#1">1</a>]</sup>. It eases writing conforming iterators and has proven less error prone than hand-coded iterators. The generated iterator conforms to an extended set of requirements based on the C++98 iterator requirements. Others, such as Chandler Carruth's LLVM <code>iterator_facade_base</code><sup>[<a href="#2">2</a>]</sup>, have provided similar classes inspired by the Boost library.</p>
-<h3 id="proposal">Proposal</h3>
+<h3 id="proposal"><a href="#proposal">Proposal</a></h3>
 <p>This paper proposes an iterator facade class template for the standard library, useful by any programmer (novice, experienced, or expert) wishing to easily create a conforming iterator. The proposal uses C++11/14/17 with concepts<sup>[<a href="#3">3</a>]</sup> and ranges<sup>[<a href="#4">4</a>]</sup> to allow straightforward specification and implementation, and to ensure that the generated iterator is actually conforming. The proposal breaks no existing code and breaks no existing ABI's. Two open-source implementations with test suites are available on GitHub<sup>[<a href="#5">5</a>][<a href="#6">6</a>]</sup>.</p>
 <p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.</p>
-<h3 id="history">History</h3>
+<h3 id="history"><a href="#history">History</a></h3>
 <p>A 2004 proposal<sup>[<a href="#7">7</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended on an iterator update proposal<sup>[<a href="#8">8</a>]</sup> that failed because without concepts the language was not rich enough to express the necessary iterator requirements.</p>
-<h2 id="examples">Examples</h2>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
 <p><em>TBS</em></p>
-<h2 id="design-decisions">Design Decisions</h2>
-<h4 id="use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</h4>
+<h2 id="design-decisions"><a href="#design-decisions">Design Decisions</a></h2>
+<h4 id="use-boost-iterator_facade-as-a-role-model"><a href="#use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</a></h4>
 <p>This ensures that the proposal represents existing practice in widespread use.</p>
-<h4 id="base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper">Base the interface on features in the Concepts TS and the Ranges TS working paper</h4>
+<h4 id="base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper"><a href="#base-the-interface-on-features-in-the-concepts-ts-and-the-ranges-ts-working-paper">Base the interface on features in the Concepts TS and the Ranges TS working paper</a></h4>
 <p>This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows an interface specification that ensures that the resulting iterator is actually conforming. It improves error message quality when a user makes a mistake.</p>
-<h4 id="use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</h4>
+<h4 id="use-cursor-mixins-to-supply-implementation-details"><a href="#use-cursor-mixins-to-supply-implementation-details">Use Cursor mixins to supply implementation details</a></h4>
 <p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
-<h2 id="proposed-wording">Proposed wording</h2>
+<h2 id="proposed-wording"><a href="#proposed-wording">Proposed wording</a></h2>
 <!-- generate-section-numbers -->
+
+
 <p><span style="background-color:lightgrey"><em>Editorial comments are shown in italics with a light grey background.</em></span></p>
 <p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
 <p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
-<h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
+<h3 id="basic-iterators-iterators.basic">24.8.9  <a href="#basic-iterators-iterators.basic">Basic Iterators [iterators.basic]</a></h3>
 <p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>]</p>
 <p>[<em>Example:</em></p>
 <p><em>TBS</em></p>
@@ -114,21 +120,21 @@
 </blockquote>
 <p>This sub-clause has three major sub-sections:</p>
 <ul>
-<li><a href="#namespace-cursor">Namespace <code>cursor</code></a> describes cursor types.</li>
-<li><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> describes mixin types.</li>
+<li><a href="#namespace-cursor">Namespace <code>cursor</code></a> describes cursor types.<br /></li>
+<li><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> describes mixin types.<br /></li>
 <li><a href="#basic_iterator">Class template <code>basic_iterator</code></a> describes <code>basic_iterator</code>.</li>
 </ul>
-<h4 id="method-of-description-informative">24.8.9.1  Method of description (Informative)</h4>
+<h4 id="method-of-description-informative">24.8.9.1  <a href="#method-of-description-informative">Method of description (Informative)</a></h4>
 <p>Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.</p>
 <p>Namespaces with names reserved to the implementation are for the sake of exposition only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.</p>
 <blockquote>
 <p>[Note: This constitutes an &quot;as if&quot; rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]</p>
 </blockquote>
-<h4 id="cursors-cursor.intro">24.8.9.2  Cursors [cursor.intro]</h4>
+<h4 id="cursors-cursor.intro">24.8.9.2  <a href="#cursors-cursor.intro">Cursors [cursor.intro]</a></h4>
 <p>Namespace <code>cursor</code> provides a scope for the class, type, concept, and trait identifiers used to create cursor types.</p>
 <pre><code>namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   namespace cursor {
 
@@ -207,7 +213,7 @@ inline namespace v1 {
     template &lt;class C&gt;
       using category_t = typename category&lt;C&gt;::type;
 }}}}}</code></pre>
-<h5 id="types-cursor.types">24.8.9.2.1  Types [cursor.types]</h5>
+<h5 id="types-cursor.types">24.8.9.2.1  <a href="#types-cursor.types">Types [cursor.types]</a></h5>
 <pre><code>template &lt;class C&gt;
   using mixin_t = <em>see below</em>;  // used by concepts, etc</code></pre>
 <p>If type <code>C::mixin</code> is defined then type <code>mixin_t</code> shall be defined as <code>C::mixin</code> , otherwise it shall be defined as <code>basic_mixin&lt;C&gt;</code>.</p>
@@ -218,15 +224,15 @@ inline namespace v1 {
 <p>Type <code>value_type_t</code> shall be defined as if defined by <code>deduced_value_t&lt;C&gt;::type</code>.</p>
 <p><em>Remarks:</em> <code>template &lt;class C&gt; deduced_value_t;</code> is an exposition only type defined as:</p>
 <ul>
-<li><code>struct value_type&lt;C&gt; { using type = typename C::value_type; };</code> if <code>C</code> has a member <code>value_type</code>.</li>
-<li>Otherwise, <code>struct value_type&lt;C&gt; { using type = decay_t&lt;reference_t&lt;C&gt;&gt;; };</code> if <code>C</code> does not have a member <code>value_type</code> and satisfies a requirement for <code>reference_t&lt;C&gt;</code>.</li>
+<li><code>struct value_type&lt;C&gt; { using type = typename C::value_type; };</code> if <code>C</code> has a member <code>value_type</code>.<br /></li>
+<li>Otherwise, <code>struct value_type&lt;C&gt; { using type = decay_t&lt;reference_t&lt;C&gt;&gt;; };</code> if <code>C</code> does not have a member <code>value_type</code> and satisfies a requirement for <code>reference_t&lt;C&gt;</code>.<br /></li>
 <li>Otherwise, <code>struct deduced_value_t {};</code>.</li>
 </ul>
 <pre><code>template &lt;class C&gt;
   using difference_type_t = <em>see below</em>; // used by concepts, etc.</code></pre>
 <pre><code>template &lt;class C&gt;
   using reference_t = <em>see below</em>;  // used by traits, etc.</code></pre>
-<h5 id="concepts-cursor.concepts">24.8.9.2.2  Concepts [cursor.concepts]</h5>
+<h5 id="concepts-cursor.concepts">24.8.9.2.2  <a href="#concepts-cursor.concepts">Concepts [cursor.concepts]</a></h5>
 <pre><code>template &lt;class C&gt;
   concept bool Cursor();</code></pre>
 <blockquote>
@@ -240,8 +246,7 @@ inline namespace v1 {
 <pre><code>template &lt;class C&gt;
   concept bool Forward();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>Input&lt;C&gt;() &amp;&amp; Sentinel&lt;C, C&gt;()</code><br />
- <code>&amp;&amp; !single_pass&lt;C&gt;::value</code>.</p>
+<p><em>Returns:</em> <code>Input&lt;C&gt;() &amp;&amp; Sentinel&lt;C, C&gt;()</code><br /> <code>&amp;&amp; !single_pass&lt;C&gt;::value</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C&gt;
   concept bool Bidirectional();</code></pre>
@@ -261,8 +266,7 @@ inline namespace v1 {
 <pre><code>template &lt;class C&gt;
   concept bool Readable();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(C&amp; c)</code><br />
- <code>{ typename value_type_t&lt;remove_cv_t&lt;C&gt;&gt;; c.read(); }</code>.</p>
+<p><em>Returns:</em> <code>requires(C&amp; c)</code><br /> <code>{ typename value_type_t&lt;remove_cv_t&lt;C&gt;&gt;; c.read(); }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C, class T&gt;
   concept bool Writable();</code></pre>
@@ -292,24 +296,21 @@ inline namespace v1 {
 <pre><code>template &lt;class C, class O&gt;
   concept bool Distance();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
- <code>{STL2_EXACT_TYPE_CONSTRAINT</code> //TODO<br />
-       <code>(lhs.distance_to(rhs), difference_type_t&lt;C&gt;);}</code>.</p>
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br /> <code>{STL2_EXACT_TYPE_CONSTRAINT</code> //TODO<br />       <code>(lhs.distance_to(rhs), difference_type_t&lt;C&gt;);}</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C, class O&gt;
   concept bool HasEqual();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
- <code>{{ lhs.equal(rhs) } -&gt; bool;}</code>.</p>
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br /> <code>{{ lhs.equal(rhs) } -&gt; bool;}</code>.</p>
 </blockquote>
-<h5 id="traits-cursor.traits">24.8.9.2.3  Traits [cursor.traits]</h5>
+<h5 id="traits-cursor.traits">24.8.9.2.3  <a href="#traits-cursor.traits">Traits [cursor.traits]</a></h5>
 <p><em>TBS</em></p>
 <p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis] or some other synopsis:</em></span></p>
 <pre><code>  // basic_mixin
   template &lt;Destructible T&gt;
   class basic_mixin;</code></pre>
 <p><span style="background-color:lightgrey"><em>Add somewhere:</em></span></p>
-<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
+<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  <a href="#class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</a></h4>
 <p>Class template <code>basic_mixin</code> describes a mixin type.</p>
 <pre><code>  template &lt;Destructible T&gt;
   class basic_mixin {
@@ -324,7 +325,7 @@ inline namespace v1 {
       noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
       requires MoveConstructible&lt;T&gt;();
   };</code></pre>
-<h5 id="basic_mixin-constructors-mixin.cons">24.8.9.3.1  <code>basic_mixin</code> constructors [mixin.cons]</h5>
+<h5 id="basic_mixin-constructors-mixin.cons">24.8.9.3.1  <a href="#basic_mixin-constructors-mixin.cons"><code>basic_mixin</code> constructors [mixin.cons]</a></h5>
 <pre><code>constexpr basic_mixin()
   noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
   requires DefaultConstructible&lt;T&gt;();</code></pre>
@@ -343,11 +344,11 @@ inline namespace v1 {
 <blockquote>
 <p><em>Effects:</em> Move constructs an object of type <code>basic_mixin</code>.</p>
 </blockquote>
-<h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
+<h4 id="class-template-basic_iterator">24.8.9.4  <a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a></h4>
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
 <pre><code>namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   
   template &lt;Cursor C&gt;  
@@ -531,20 +532,20 @@ inline namespace v1 {
     const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
     noexcept(noexcept(!(lhs &lt; rhs)));
 }}}}</code></pre>
-<h5 id="requirements-basic_iterator.require">24.8.9.4.1  Requirements [basic_iterator.require]</h5>
+<h5 id="requirements-basic_iterator.require">24.8.9.4.1  <a href="#requirements-basic_iterator.require">Requirements [basic_iterator.require]</a></h5>
 <p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
 <p><span style="background-color:lightgrey"><em>Reference is made to 17.5.2.3 because implementations will need to rely on paragraph 3, &quot;An implementation may use any technique that provides equivalent external behavior&quot; since specifications like <code>operator*()</code> &quot;Returns: <code>cur().read()</code> may require some form of indirection in actual implementations to meet requirements.&quot;</em></span></p>
-<h5 id="types-basic_iterator.types">24.8.9.4.2  Types [basic_iterator.types]</h5>
+<h5 id="types-basic_iterator.types">24.8.9.4.2  <a href="#types-basic_iterator.types">Types [basic_iterator.types]</a></h5>
 <pre><code>using difference_type = <em>see below</em>;</code></pre>
 <p><code>difference_type</code> is defined as:</p>
 <ul>
-<li><code>C::difference_type</code> if <code>C</code> has a member type <code>difference_type</code>,</li>
-<li>otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a <code>distance_to</code> member function,</li>
+<li><code>C::difference_type</code> if <code>C</code> has a member type <code>difference_type</code>,<br /></li>
+<li>otherwise <code>decltype(declval&lt;const C&amp;&gt;().distance_to(declval&lt;const C&amp;&gt;()))</code> if <code>C</code> has such a <code>distance_to</code> member function,<br /></li>
 <li>otherwise <code>std::ptrdiff_t</code>.</li>
 </ul>
-<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
+<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.3  <a href="#constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</a></h5>
 <p><em>TBS</em></p>
-<h5 id="dereferences-basic_iterator.deref">24.8.9.4.4  Dereferences [basic_iterator.deref]</h5>
+<h5 id="dereferences-basic_iterator.deref">24.8.9.4.4  <a href="#dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</a></h5>
 <pre><code>constexpr decltype(auto) operator*() const
   noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
 <blockquote>
@@ -569,7 +570,7 @@ inline namespace v1 {
 <blockquote>
 <p><em>Returns:</em> <code>cur().arrow()</code>.</p>
 </blockquote>
-<h5 id="modifiers-basic_iterator.mods">24.8.9.4.5  Modifiers [basic_iterator.mods]</h5>
+<h5 id="modifiers-basic_iterator.mods">24.8.9.4.5  <a href="#modifiers-basic_iterator.mods">Modifiers [basic_iterator.mods]</a></h5>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
@@ -594,10 +595,7 @@ inline namespace v1 {
          noexcept(++declval&lt;basic_iterator&amp;&gt;()))
   requires cursor::Next&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em><br />
- <code>postfix_increment_result_t tmp(*this);</code><br />
- <code>++*this;</code><br />
- <code>return tmp;</code></p>
+<p><em>Effects:</em><br /> <code>postfix_increment_result_t tmp(*this);</code><br /> <code>++*this;</code><br /> <code>return tmp;</code></p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator--() &amp;
   noexcept(noexcept(declval&lt;C&amp;&gt;().prev()))
@@ -614,10 +612,7 @@ inline namespace v1 {
          noexcept(--declval&lt;basic_iterator&amp;&gt;()))
   requires cursor::Bidirectional&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em><br />
- <code>auto tmp = *this;</code><br />
- <code>--*this;</code><br />
- <code>return tmp;</code></p>
+<p><em>Effects:</em><br /> <code>auto tmp = *this;</code><br /> <code>--*this;</code><br /> <code>return tmp;</code></p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator+=(difference_type n) &amp;
   noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
@@ -644,10 +639,7 @@ inline namespace v1 {
          noexcept(declval&lt;C&amp;&gt;().advance(n)))
     requires cursor::RandomAccess&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em><br />
- <code>auto tmp = i;</code><br />
- <code>tmp.cur().advance(n);</code><br />
- <code>return tmp;</code></p>
+<p><em>Effects:</em><br /> <code>auto tmp = i;</code><br /> <code>tmp.cur().advance(n);</code><br /> <code>return tmp;</code></p>
 </blockquote>
 <pre><code>friend constexpr basic_iterator
   operator+(difference_type n, const basic_iterator&amp; i)
@@ -669,7 +661,7 @@ inline namespace v1 {
 <blockquote>
 <p><em>Returns:</em> <code>*(*this + n)</code>.</p>
 </blockquote>
-<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.6  <code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h5>
+<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.6  <a href="#basic_iterator-nonmember-functions-basic_iterator.nonmem"><code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</a></h5>
 <pre><code>template &lt;class C&gt;
   constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
     noexcept(noexcept(i.cur()))</code></pre>
@@ -793,9 +785,11 @@ constexpr bool operator&gt;=(
 <p><em>Returns:</em> <code>!(lhs &lt; rhs)</code>.</p>
 </blockquote>
 <!-- generate-section-numbers=false -->
-<h2 id="acknowledgements">Acknowledgements</h2>
+
+
+<h2 id="acknowledgements"><a href="#acknowledgements">Acknowledgements</a></h2>
 <p><em>TBS</em></p>
-<h2 id="references">References</h2>
+<h2 id="references"><a href="#references">References</a></h2>
 <p>[<a name="1">1</a>] David Abrahams, Jeremy Siek, Thomas Witt, <a href="https://www.boost.org/doc/libs/1_59_0/libs/iterator/doc/iterator_facade.html">Boost Iterator Facade</a>, 2003.</p>
 <p>[<a name="2">2</a>] Chandler Carruth, <a href="https://github.com/llvm-mirror/llvm/blob/master/include/llvm/ADT/iterator.h">LLVM <code>iterator_facade_base</code> iterator.h</a>, 2014.</p>
 <p>[<a name="3">3</a>] Andrew Sutton, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4553.pdf">N4553, Working Draft, C++ extensions for Concepts</a>, 2015.</p>

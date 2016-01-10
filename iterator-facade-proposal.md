@@ -15,7 +15,7 @@
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
     Eric Niebler &lt;....&gt;</br>
-	Casey Carter &lt;....&gt;</td>
+	Casey Carter &lt;casey at carter dot net&gt;</td>
 </tr>
 </table>
 
@@ -113,7 +113,7 @@ Namespace ```cursor``` provides a scope for the class, type, concept, and trait 
 ```
 namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   namespace cursor {
 
@@ -387,7 +387,7 @@ Class template ```basic_iterator``` describes an iterator over a sequence. A typ
 ```
 namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   
   template <Cursor C>  
