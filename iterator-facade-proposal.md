@@ -1,11 +1,11 @@
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left">D0186R0</td>
+  <td align="left"><span style="background-color:yellow">D0186R0</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left">2015-12-20</td>
+  <td align="left"><span style="background-color:yellow">2016-01-09</span></td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -14,8 +14,8 @@
 <tr>
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
-    Eric Niebler &lt;....&gt;</br>
-	Casey Carter &lt;....&gt;</td>
+  Eric Niebler &lt;<span style="background-color:yellow">???</span>&gt;</br>
+	Casey Carter &lt;<span style="background-color:yellow">???</span>&gt;</td>
 </tr>
 </table>
 
@@ -108,7 +108,13 @@ Namespaces with names reserved to the implementation are for the sake of exposit
 
 #### Cursors [cursor.intro]
 
-Namespace ```cursor``` provides a scope for the class, type, concept, and trait identifiers used to create cursor types.
+Namespace ```cursor``` provides a scope for the type traits, concepts, and other traits needed to describe cursor types.
+
+##### Mapping desired ```basic_iterator``` characteristics to cursor members
+
+The characteristics of a ```basic_iterator``` are determined by which members are present in its Cursor template parameter, C.
+
+<span style="background-color:yellow">*Should the four following type traits be "for exposition only"? They are perhaps implementation details that are exposed only because without them exposition becomes much harder to write and understand.*</span>
 
 ```
 namespace std {
@@ -117,15 +123,18 @@ namespace ranges_v1 {
 inline namespace v1 {
   namespace cursor {
 
-    // types
+    // type traits
     template <class C>
-      using mixin_t = %!{see below}!%;  // used by concepts, etc
+      using mixin_t = %!{see below}!%;
     template <class C>
-      using value_type_t = %!{see below}!%; // used by concepts, etc.
+      requires %!{see below}!%
+      using value_type_t = %!{see below}!%;
     template <class C>
-      using difference_type_t = %!{see below}!%; // used by concepts, etc.
+      using difference_type_t = %!{see below}!%;
     template <class C>
-      using reference_t = %!{see below}!%;  // used by traits, etc.
+      requires
+        requires(const C& c) {{c.read()} -> auto&&;}
+      using reference_t = %!{see below}!%;
       
     // concepts
     template <class C>
@@ -156,6 +165,10 @@ inline namespace v1 {
       concept bool Distance();
     template <class C, class O>
       concept bool HasEqual();
+    template <class S, class C>
+      concept bool Sentinel();
+    template <class S, class C>
+      concept bool SizedSentinel();
     
     // single_pass trait
     template <class> constexpr bool single_pass = false;
@@ -194,40 +207,47 @@ inline namespace v1 {
 }}}}}
 ```
 
-##### Types  [cursor.types]
+##### Type traits  [cursor.types]
+
+These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.
 
 ````
 template <class C>
   using mixin_t = %!{see below}!%;  // used by concepts, etc
 ````
-If type ```C::mixin``` is defined then type ```mixin_t``` shall be defined as ```C::mixin``` , otherwise it shall be defined as ```basic_mixin<C>```. 
+Type ```mixin_t``` is defined as ```C::mixin``` if type ```C::mixin``` is defined. Otherwise it is defined as ```basic_mixin<C>```. 
 
 ````
 template <class C>
   requires %!{see below}!%
   using value_type_t = %!{see below}!%; // used by concepts, etc.
 ````
-The ```requires``` clause is satisfied if ```Same<deduced_value_t<C>::type, decay_t<deduced_value_t<C>::type>>()``` would be satisfied.
+The ```requires``` clause is satisfied if and only if ```Same<deduced_value_t<C>::type, decay_t<deduced_value_t<C>::type>>()``` would be satisfied.
 
-Type ```value_type_t``` shall be defined as if defined by ```deduced_value_t<C>::type```.
+Type ```value_type_t``` is defined as ```deduced_value_t<C>::type```.
 
 *Remarks:*  ```template <class C> deduced_value_t;``` is an exposition only type defined as:
-  * ```struct value_type<C> { using type = typename C::value_type; };``` if ```C``` has a member ```value_type```. 
-  * Otherwise, ```struct value_type<C> { using type = decay_t<reference_t<C>>; };``` if ```C``` does not have a member ```value_type``` and satisfies a requirement for ```reference_t<C>```. 
-  * Otherwise, ```struct deduced_value_t {};```.
-   
+* ```struct value_type<C> {using type = typename C::value_type;};``` if ```C``` has a member ```value_type```, 
+* Otherwise ```struct value_type<C> {using type = decay_t<reference_t<C>>;};``` if ```C``` does not have a member ```value_type``` and satisfies a requirement for ```reference_t<C>```. 
+* Otherwise ```struct deduced_value_t {};```.
 
 ````
 template <class C>
   using difference_type_t = %!{see below}!%; // used by concepts, etc.
 ````
+Type ```difference_type_t``` is defined as:
 
+* ```C::difference_type``` if ```C``` has a member ```difference_type```, 
+* Otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a ```distance_to``` member function,
+* Otherwise ```std::ptrdiff_t```.
 
 ````
 template <class C>
+  requires
+    requires(const C& c) {{c.read()} -> auto&&;}
   using reference_t = %!{see below}!%;  // used by traits, etc.
 ````
-
+Type ```reference_t``` is defined as ```decltype(declval<const C&>().read())```.
 
 ##### Concepts  [cursor.concepts]
 
@@ -320,6 +340,20 @@ template <class C, class O>
 >*Returns:* ```requires(const C& lhs, const Other& rhs)```
   ```{{ lhs.equal(rhs) } -> bool;}```.
 
+```
+template <class S, class C>
+  concept bool Sentinel();
+```
+>*Returns:* ```Cursor<C>()```
+  ```&& requires(const C& c, const S& s) {c.equal(s); };}```.
+
+```
+template <class S, class C>
+concept bool SizedSentinel();
+```
+>*Returns:* ```Sentinel<S, C>()&& requires(const C& c, const S& s)```
+  ``` {{c.distance(s)} -> Same<difference_type_t<C>;}```.
+
 ##### Traits [cursor.traits]
 
 *TBS*
@@ -392,10 +426,10 @@ inline namespace v1 {
   
   template <Cursor C>  
   class basic_iterator
-  : public cursor::mixin_t<C>  // TODO: move mixin_t<> from cursor::access to cursor
+    : public cursor::mixin_t<C>
   {
     // types
-    using difference_type = %!{see below}!%;
+    using difference_type = cursor::difference_type_t<C>;
     
     // constructors, assignments, and moves
     basic_iterator() = default;
@@ -461,9 +495,6 @@ inline namespace v1 {
     constexpr decltype(auto) operator[](difference_type n) const
       noexcept(noexcept(*(declval<basic_iterator&>() + n)))
       requires cursor::RandomAccess<C>();
-```  
-  <span style="background-color:lightgrey"><blockquote style="background-color:lightgrey">*We wish to hide implementation details, but since we wish to utilize the cursor type C that provides ```basic_iterator```'s customization types and functions as a mixin, it becomes a practical impossibility to describe ```basic_iterator``` without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private "exposition only" members.*</blockquote></span>
-```  
   private:  %!{// all private members are exposition only}!% 
     // types   
     using mixin_t = cursor::mixin_t<C>;
@@ -539,17 +570,17 @@ inline namespace v1 {
     noexcept(rhs != lhs);
   template <class C>
     requires cursor::SizedSentinel<C, C>()
-  constexpr cursor::access::difference_type_t<C> operator-(
+  constexpr difference_type_t<C> operator-(
     const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
     noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))));
   template <class C, class S>
     requires cursor::SizedSentinel<S, C>()
-  constexpr cursor::access::difference_type_t<C> operator-(
+  constexpr difference_type_t<C> operator-(
     const S& lhs, const basic_iterator<C>& rhs)
     noexcept(noexcept(get_cursor(rhs).distance_to(lhs)));
   template <class C, class S>
     requires cursor::SizedSentinel<S, C>()
-  constexpr cursor::access::difference_type_t<C> operator-(
+  constexpr difference_type_t<C> operator-(
     const basic_iterator<C>& lhs, const S& rhs)
     noexcept(noexcept(-(rhs - lhs)));
   template <class C>
@@ -579,19 +610,7 @@ inline namespace v1 {
 
 Private members of class ```basic_iterator``` are for exposition only (17.5.2.3 Private members [objects.within.classes]).
 
-<span style="background-color:lightgrey">*Reference is made to 17.5.2.3 because implementations will need to rely on paragraph 3, "An implementation may use any technique that provides equivalent external behavior" since specifications like ```operator*()``` "Returns: ```cur().read()``` may require some form of indirection in actual implementations to meet requirements."*</span>
-
-##### Types [basic_iterator.types]
-
-```
-using difference_type = %!{see below}!%;
-```
-
-```difference_type``` is defined as:
-
-* ```C::difference_type``` if ```C``` has a member type ```difference_type```, 
-* otherwise ```decltype(declval<const C&>().distance_to(declval<const C&>()))``` if ```C``` has such a ```distance_to``` member function,
-* otherwise ```std::ptrdiff_t```.
+span style="background-color:yellow">*We wish to hide implementation details, but it becomes a practical impossibility to describe ```basic_iterator``` without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private "exposition only" members.*</span>
 
 ##### Constructors, assignments, and moves [basic_iterator.cons]
 
@@ -815,7 +834,7 @@ constexpr bool operator!=(
 ```
 template <class C>
   requires cursor::SizedSentinel<C, C>()
-constexpr cursor::access::difference_type_t<C> operator-(
+constexpr cursor::difference_type_t<C> operator-(
   const basic_iterator<C>& lhs, const basic_iterator<C>& rhs)
   noexcept(noexcept(get_cursor(rhs).distance_to(get_cursor(lhs))))
 ```
@@ -824,7 +843,7 @@ constexpr cursor::access::difference_type_t<C> operator-(
 ```
 template <class C, class S>
   requires cursor::SizedSentinel<S, C>()
-constexpr cursor::access::difference_type_t<C> operator-(
+constexpr cursor::difference_type_t<C> operator-(
   const S& lhs, const basic_iterator<C>& rhs)
   noexcept(noexcept(get_cursor(rhs).distance_to(lhs)))
 ```
@@ -833,7 +852,7 @@ constexpr cursor::access::difference_type_t<C> operator-(
 ```
 template <class C, class S>
   requires cursor::SizedSentinel<S, C>()
-constexpr cursor::access::difference_type_t<C> operator-(
+constexpr cursor::difference_type_t<C> operator-(
   const basic_iterator<C>& lhs, const S& rhs)
   noexcept(noexcept(-(rhs - lhs)))
 ```
