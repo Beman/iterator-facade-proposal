@@ -15,8 +15,7 @@
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
   Eric Niebler &lt;<span style="background-color:yellow">???</span>&gt;</br>
-	Casey Carter &lt;<span style="background-color:yellow">???</span>&gt;</td>
-</tr>
+  Casey Carter &lt;casey at carter dot net&gt;</td></tr>
 </table>
 
 <!-- generate-section-numbers=false -->
@@ -119,7 +118,7 @@ The characteristics of a ```basic_iterator``` are determined by which members ar
 ```
 namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   namespace cursor {
 
@@ -330,8 +329,7 @@ template <class C, class O>
   concept bool Distance();
 ```
 >*Returns:* ```requires(const C& lhs, const Other& rhs)```
-  ```{STL2_EXACT_TYPE_CONSTRAINT```  //TODO
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```(lhs.distance_to(rhs), difference_type_t<C>);}```.
+  ```{{ lhs.distance_to(rhs) } -> Same<difference_type_t<C>>; }```.
 
 ```
 template <class C, class O>
@@ -421,7 +419,7 @@ Class template ```basic_iterator``` describes an iterator over a sequence. A typ
 ```
 namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   
   template <Cursor C>  
