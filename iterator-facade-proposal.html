@@ -29,6 +29,7 @@
 <li><a href="#basic-iterators-iterators.basic">Basic Iterators [iterators.basic]</a><ul>
 <li><a href="#method-of-description-informative">Method of description (Informative)</a></li>
 <li><a href="#cursors-cursor.intro">Cursors [cursor.intro]</a><ul>
+<li><a href="#mapping-desired-basic_iterator-characteristics-to-cursor-members">Mapping desired <code>basic_iterator</code> characteristics to cursor members</a></li>
 <li><a href="#type-traits-cursor.types">Type traits [cursor.types]</a></li>
 <li><a href="#concepts-cursor.concepts">Concepts [cursor.concepts]</a></li>
 <li><a href="#traits-cursor.traits">Traits [cursor.traits]</a></li>
@@ -67,8 +68,7 @@
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
   Eric Niebler &lt;<span style="background-color:yellow">???</span>&gt;</br>
-    Casey Carter &lt;<span style="background-color:yellow">???</span>&gt;</td>
-</tr>
+  Casey Carter &lt;casey at carter dot net&gt;</td></tr>
 </table>
 <!-- generate-section-numbers=false -->
 <h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
@@ -125,10 +125,12 @@
 </blockquote>
 <h4 id="cursors-cursor.intro">24.8.9.2  Cursors [cursor.intro]</h4>
 <p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
-<p><span style="background-color:yellow"><em>Should the four type traits be &quot;for exposition only&quot;? They are essentially implementation details that are exposed only because without them exposition becomes much harder to write and understand.</em></span></p>
+<h5 id="mapping-desired-basic_iterator-characteristics-to-cursor-members">24.8.9.2.1  Mapping desired <code>basic_iterator</code> characteristics to cursor members</h5>
+<p>The characteristics of a <code>basic_iterator</code> are determined by which members are present in its Cursor template parameter, C.</p>
+<p><span style="background-color:yellow"><em>Should the four following type traits be &quot;for exposition only&quot;? They are perhaps implementation details that are exposed only because without them exposition becomes much harder to write and understand.</em></span></p>
 <pre><code>namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   namespace cursor {
 
@@ -174,6 +176,10 @@ inline namespace v1 {
       concept bool Distance();
     template &lt;class C, class O&gt;
       concept bool HasEqual();
+    template &lt;class S, class C&gt;
+      concept bool Sentinel();
+    template &lt;class S, class C&gt;
+      concept bool SizedSentinel();
     
     // single_pass trait
     template &lt;class&gt; constexpr bool single_pass = false;
@@ -210,7 +216,7 @@ inline namespace v1 {
     template &lt;class C&gt;
       using category_t = typename category&lt;C&gt;::type;
 }}}}}</code></pre>
-<h5 id="type-traits-cursor.types">24.8.9.2.1  Type traits [cursor.types]</h5>
+<h5 id="type-traits-cursor.types">24.8.9.2.2  Type traits [cursor.types]</h5>
 <p>These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.</p>
 <pre><code>template &lt;class C&gt;
   using mixin_t = <em>see below</em>;  // used by concepts, etc</code></pre>
@@ -239,7 +245,7 @@ inline namespace v1 {
     requires(const C&amp; c) {{c.read()} -&gt; auto&amp;&amp;;}
   using reference_t = <em>see below</em>;  // used by traits, etc.</code></pre>
 <p>Type <code>reference_t</code> is defined as <code>decltype(declval&lt;const C&amp;&gt;().read())</code>.</p>
-<h5 id="concepts-cursor.concepts">24.8.9.2.2  Concepts [cursor.concepts]</h5>
+<h5 id="concepts-cursor.concepts">24.8.9.2.3  Concepts [cursor.concepts]</h5>
 <pre><code>template &lt;class C&gt;
   concept bool Cursor();</code></pre>
 <blockquote>
@@ -306,8 +312,7 @@ inline namespace v1 {
   concept bool Distance();</code></pre>
 <blockquote>
 <p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
- <code>{STL2_EXACT_TYPE_CONSTRAINT</code> //TODO<br />
-       <code>(lhs.distance_to(rhs), difference_type_t&lt;C&gt;);}</code>.</p>
+ <code>{{ lhs.distance_to(rhs) } -&gt; Same&lt;difference_type_t&lt;C&gt;&gt;; }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C, class O&gt;
   concept bool HasEqual();</code></pre>
@@ -315,7 +320,19 @@ inline namespace v1 {
 <p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
  <code>{{ lhs.equal(rhs) } -&gt; bool;}</code>.</p>
 </blockquote>
-<h5 id="traits-cursor.traits">24.8.9.2.3  Traits [cursor.traits]</h5>
+<pre><code>template &lt;class S, class C&gt;
+  concept bool Sentinel();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Cursor&lt;C&gt;()</code><br />
+ <code>&amp;&amp; requires(const C&amp; c, const S&amp; s) {c.equal(s); };}</code>.</p>
+</blockquote>
+<pre><code>template &lt;class S, class C&gt;
+concept bool SizedSentinel();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>Sentinel&lt;S, C&gt;()&amp;&amp; requires(const C&amp; c, const S&amp; s)</code><br />
+ <code>{{c.distance(s)} -&gt; Same&lt;difference_type_t&lt;C&gt;;}</code>.</p>
+</blockquote>
+<h5 id="traits-cursor.traits">24.8.9.2.4  Traits [cursor.traits]</h5>
 <p><em>TBS</em></p>
 <p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis] or some other synopsis:</em></span></p>
 <pre><code>  // basic_mixin
@@ -360,7 +377,7 @@ inline namespace v1 {
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
 <pre><code>namespace std {
 namespace experimental {
-namespace ranges_v1 {
+namespace ranges {
 inline namespace v1 {
   
   template &lt;Cursor C&gt;  
