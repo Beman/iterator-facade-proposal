@@ -593,7 +593,13 @@ inline namespace v1 {
 <h5 id="modifiers-basic_iterator.mods">24.8.9.4.4  Modifiers [basic_iterator.mods]</h5>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
 <blockquote>
+<p><em>Effects:</em> None.</p>
+</blockquote>
+<blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p>[<em>Note:</em> This overload is only selected if the follow overload is not selected. <em>-- end note</em>]</p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp;
   noexcept(noexcept(declval&lt;C&amp;&gt;().next()))
@@ -606,7 +612,13 @@ inline namespace v1 {
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator++(int) &amp; noexcept;</code></pre>
 <blockquote>
+<p><em>Effects:</em> None.</p>
+</blockquote>
+<blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p>[<em>Note:</em> This overload is only selected if the follow overload is not selected. <em>-- end note</em>]</p>
 </blockquote>
 <pre><code>constexpr postfix_increment_result_t operator++(int) &amp;
   noexcept(is_nothrow_constructible&lt;postfix_increment_result_t,

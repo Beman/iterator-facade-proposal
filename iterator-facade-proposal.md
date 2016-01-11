@@ -642,13 +642,17 @@ constexpr decltype(auto) operator->() const
   requires cursor::Arrow<const C>();
 ```
 >*Returns:* ```cur().arrow()```.
-
+ 
 ##### Modifiers [basic_iterator.mods]
 
 ```
 constexpr basic_iterator& operator++() & noexcept;
 ```
+>*Effects:* None.
+
 >*Returns:* ```*this```.
+
+>[*Note:* This overload is only selected if the follow overload is not selected. *-- end note*]
 
 ```
 constexpr basic_iterator& operator++() &
@@ -662,7 +666,11 @@ constexpr basic_iterator& operator++() &
 ```
 constexpr basic_iterator& operator++(int) & noexcept;
 ```
+>*Effects:* None.
+
 >*Returns:* ```*this```.
+
+>[*Note:* This overload is only selected if the follow overload is not selected. *-- end note*]
 
 ```
 constexpr postfix_increment_result_t operator++(int) &
