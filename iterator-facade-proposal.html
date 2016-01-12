@@ -46,6 +46,7 @@
 </ul></li>
 </ul></li>
 </ul></li>
+<li><a href="#open-questions">Open questions</a></li>
 <li><a href="#acknowledgements">Acknowledgements</a></li>
 <li><a href="#references">References</a></li>
 </ul></li>
@@ -334,11 +335,11 @@ concept bool SizedSentinel();</code></pre>
 </blockquote>
 <h5 id="traits-cursor.traits">24.8.9.2.4  Traits [cursor.traits]</h5>
 <p><em>TBS</em></p>
-<p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis] or some other synopsis:</em></span></p>
+<p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis]:</em></span></p>
 <pre><code>  // basic_mixin
   template &lt;Destructible T&gt;
   class basic_mixin;</code></pre>
-<p><span style="background-color:lightgrey"><em>Add somewhere:</em></span></p>
+<p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
 <h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
 <p>Class template <code>basic_mixin</code> describes a mixin type.</p>
 <pre><code>  template &lt;Destructible T&gt;
@@ -373,6 +374,7 @@ concept bool SizedSentinel();</code></pre>
 <blockquote>
 <p><em>Effects:</em> Move constructs an object of type <code>basic_mixin</code>.</p>
 </blockquote>
+<p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
 <h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
 <pre><code>namespace std {
@@ -656,7 +658,7 @@ inline namespace v1 {
   noexcept(noexcept(declval&lt;C&amp;&gt;().advance(n)))
   requires cursor::RandomAccess&lt;C&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em> <code>cur().advance(-n)</code>.</p>
+<p><em>Effects:</em> <code>cur().advance(n)</code>.</p>
 </blockquote>
 <blockquote>
 <p><em>Returns:</em> <code>*this</code>.</p>
@@ -826,6 +828,9 @@ constexpr bool operator&gt;=(
 <p><em>Returns:</em> <code>!(lhs &lt; rhs)</code>.</p>
 </blockquote>
 <!-- generate-section-numbers=false -->
+<h2 id="open-questions">Open questions</h2>
+<p><strong>Is the target C++17 or the the Ranges TS?</strong> Deferred until the committee decides if the Concepts TS and Ranges TS are included in C++17.</p>
+<p><strong>Should the class template <code>basic_mixin</code> be added to 20 &quot;General utilities&quot; or 24 &quot;Iterators&quot;?</strong> The proposed wording adds it to &quot;Iterators&quot;, but there is nothing iterator specific in its design or description, and it is generally useful across multiple problem domains. LEWG input would be helpful.</p>
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p><em>TBS</em></p>
 <h2 id="references">References</h2>

@@ -356,7 +356,7 @@ concept bool SizedSentinel();
 
 *TBS*
 
-<span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis] or some other synopsis:*</span>
+<span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis]:*</span>
 
 ```
   // basic_mixin
@@ -364,7 +364,7 @@ concept bool SizedSentinel();
   class basic_mixin;
 ``` 
 
-<span style="background-color:lightgrey">*Add somewhere:*</span>
+<span style="background-color:lightgrey">*Continue to add to Basic Iterators [iterators.basic]:*</span>
         
 ####  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]
 
@@ -411,6 +411,8 @@ constexpr basic_mixin(T&& t)
 ```
 
 >*Effects:* Move constructs an object of type <code>basic_mixin</code>.
+
+<span style="background-color:lightgrey">*Continue to add to Basic Iterators [iterators.basic]:*</span>
 
 #### Class template ```basic_iterator```
 
@@ -711,7 +713,7 @@ constexpr basic_iterator& operator+=(difference_type n) &
   noexcept(noexcept(declval<C&>().advance(n)))
   requires cursor::RandomAccess<C>();
 ```
->*Effects:* ```cur().advance(-n)```.
+>*Effects:* ```cur().advance(n)```.
 
 >*Returns:* ```*this```.
 
@@ -902,6 +904,12 @@ constexpr bool operator>=(
 
 
 <!-- generate-section-numbers=false -->
+
+## Open questions
+
+**Is the target C++17 or the the Ranges TS?** Deferred until the committee decides if the Concepts TS and Ranges TS are included in C++17.
+
+**Should the class template ```basic_mixin``` be added to 20 "General utilities" or 24 "Iterators"?** The proposed wording adds it to "Iterators", but there is nothing iterator specific in its design or description, and it is generally useful across multiple problem domains. LEWG input would be helpful.
 
 ## Acknowledgements
 
