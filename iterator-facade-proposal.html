@@ -35,7 +35,8 @@
 <li><a href="#traits-cursor.traits">Traits [cursor.traits]</a></li>
 </ul></li>
 <li><a href="#class-template-basic_mixin-iterator.mixin">Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</a><ul>
-<li><a href="#basic_mixin-constructors-mixin.cons"><code>basic_mixin</code> constructors [mixin.cons]</a></li>
+<li><a href="#constructors-mixin.cons">Constructors [mixin.cons]</a></li>
+<li><a href="#t-object-access-mixin.access"><code>T</code> object access [mixin.access]</a></li>
 </ul></li>
 <li><a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a><ul>
 <li><a href="#requirements-basic_iterator.require">Requirements [basic_iterator.require]</a></li>
@@ -59,7 +60,7 @@
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left"><span style="background-color:yellow">2016-01-09</span></td>
+  <td align="left"><span style="background-color:yellow">2016-01-13</span></td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -68,14 +69,14 @@
 <tr>
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
-  Eric Niebler &lt;<span style="background-color:yellow">???</span>&gt;</br>
+  Eric Niebler &lt;eric dot niebler at gmail dot com&gt;</br>
   Casey Carter &lt;casey at carter dot net&gt;</td></tr>
 </table>
 <!-- generate-section-numbers=false -->
 <h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
 <p><em>&quot;We are what we pretend to be, so we must be careful about what we pretend to be.&quot; - Kurt Vonnegut</em></p>
 <blockquote>
-<p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations with test suites available. Draft wording provided.</p>
+<p><strong>Summary:</strong> Proposes a library component for easily creating conforming iterators. Based on existing practice. Depends only on the C++17 working paper plus Concepts TS and Ranges TS. Breaks no existing code or ABI's. Two open-source implementations including test suites available. Draft wording provided.</p>
 </blockquote>
 <h2 id="table-of-contents">Table of Contents</h2>
 <p><em>TBS</em></p>
@@ -104,13 +105,13 @@
 <p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
 <p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
 <h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
-<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>]</p>
+<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>] Cursors are implementation details that are encapsulated as mixins so that they are hidden from users of an instantiation of <code>basic_iterator</code>.</p>
 <p>[<em>Example:</em></p>
 <p><em>TBS</em></p>
 <p><em>-- end example</em>]</p>
-<p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>.</p>
+<p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>. If a cursor does not define a nested mixin type, a default mixin type will be provided.</p>
 <blockquote>
-<p>[Note: Mixin types add interface to types that inherit from them. They can also hold an object -- in this case a cursor. By publicly inheriting from a mixin type, <code>basic_iterator</code> gets: (a) access to the cursor object, and, optionally, (b) additional members and constructors. -- end note]</p>
+<p>[<em>Note:</em> By publicly inheriting from a mixin type parameterized by the cursor type, <code>basic_iterator</code> gets access to the cursor object, and, optionally, additional members such as constructors. <em>-- end note</em>]</p>
 </blockquote>
 <p>This sub-clause has three major sub-sections:</p>
 <ul>
@@ -128,7 +129,6 @@
 <p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
 <h5 id="mapping-desired-basic_iterator-characteristics-to-cursor-members">24.8.9.2.1  Mapping desired <code>basic_iterator</code> characteristics to cursor members</h5>
 <p>The characteristics of a <code>basic_iterator</code> are determined by which members are present in its Cursor template parameter, C.</p>
-<p><span style="background-color:yellow"><em>Should the four following type traits be &quot;for exposition only&quot;? They are perhaps implementation details that are exposed only because without them exposition becomes much harder to write and understand.</em></span></p>
 <pre><code>namespace std {
 namespace experimental {
 namespace ranges {
@@ -342,9 +342,12 @@ concept bool SizedSentinel();</code></pre>
 <p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
 <h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.3  Class template <code>basic_mixin</code> [<a name="iterator-mixin">iterator.mixin</a>]</h4>
 <p>Class template <code>basic_mixin</code> describes a mixin type.</p>
+<p>Class <code>basic_mixin</code> inherits from template parameter <code>T</code> or from an implementation-supplied base class that inherits from template parameter <code>T</code>.</p>
+<p>[<em>Note:</em> Permitting an implementation-supplied base class gives an implementation latitude to perform empty base optimization if it so chooses. <em>-- end note</em>]</p>
 <pre><code>  template &lt;Destructible T&gt;
-  class basic_mixin {
+  class basic_mixin : protected <em>see below</em> {
   public:
+    // constructors 
     constexpr basic_mixin()
       noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
       requires DefaultConstructible&lt;T&gt;();
@@ -354,13 +357,22 @@ concept bool SizedSentinel();</code></pre>
     constexpr basic_mixin(T&amp;&amp; t)
       noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
       requires MoveConstructible&lt;T&gt;();
+
+    // T object access
+    constexpr T&amp; get() &amp; noexcept;
+    constexpr const T&amp; get() const&amp; noexcept;
+    constexpr T&amp;&amp; get() &amp;&amp; noexcept;
+    constexpr const T&amp;&amp; get() const&amp;&amp; noexcept;
   };</code></pre>
-<h5 id="basic_mixin-constructors-mixin.cons">24.8.9.3.1  <code>basic_mixin</code> constructors [mixin.cons]</h5>
+<h5 id="constructors-mixin.cons">24.8.9.3.1  Constructors [mixin.cons]</h5>
 <pre><code>constexpr basic_mixin()
   noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
   requires DefaultConstructible&lt;T&gt;();</code></pre>
 <blockquote>
-<p><em>Effects:</em> Default constructs an object of type <code>basic_mixin</code>.</p>
+<p><em>Effects:</em> Default constructs an object of class <code>basic_mixin</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> <code>get()</code> returns a reference to a default constructed object or sub-object of type <code>T</code>.</p>
 </blockquote>
 <pre><code>constexpr basic_mixin(const T&amp; t)
   noexcept(is_nothrow_copy_constructible&lt;T&gt;::value)
@@ -368,11 +380,29 @@ concept bool SizedSentinel();</code></pre>
 <blockquote>
 <p><em>Effects:</em> Copy constructs an object of type <code>basic_mixin</code>.</p>
 </blockquote>
+<blockquote>
+<p><em>Postconditions:</em> <code>get()</code> returns a reference to a copy constructed object or sub-object of type <code>T</code> with same state as <code>t</code>.</p>
+</blockquote>
 <pre><code>constexpr basic_mixin(T&amp;&amp; t)
   noexcept(is_nothrow_move_constructible&lt;T&gt;::value)
   requires MoveConstructible&lt;T&gt;();</code></pre>
 <blockquote>
 <p><em>Effects:</em> Move constructs an object of type <code>basic_mixin</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> <code>get()</code> returns a reference to a move constructed object or sub-object of type <code>T</code> with the state of <code>std::move(t)</code>.</p>
+</blockquote>
+<h5 id="t-object-access-mixin.access">24.8.9.3.2  <code>T</code> object access [mixin.access]</h5>
+<p>The <code>get</code> member functions are permitted return a reference to either an object or a sub-object. [<em>Note:</em> This allows an implementation to return a reference to either a data member of type T or <code>*this</code> respectively, depending on implementation details. -- <em>end note</em>]</p>
+<pre><code>constexpr T&amp; get() &amp; noexcept;
+constexpr const T&amp; get() const&amp; noexcept;</code></pre>
+<blockquote>
+<p><em>Returns:</em> A reference to the object or sub-object of type T created when <code>*this</code> was constructed.</p>
+</blockquote>
+<pre><code>constexpr T&amp;&amp; get() &amp;&amp; noexcept;
+constexpr const T&amp;&amp; get() const&amp;&amp; noexcept;</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>std::move(x)</code>, where <code>x</code> is a reference to the object or sub-object of type T created when <code>*this</code> was constructed..</p>
 </blockquote>
 <p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
 <h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
