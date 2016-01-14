@@ -29,7 +29,6 @@
 <li><a href="#basic-iterators-iterators.basic">Basic Iterators [iterators.basic]</a><ul>
 <li><a href="#method-of-description-informative">Method of description (Informative)</a></li>
 <li><a href="#cursors-cursor.intro">Cursors [cursor.intro]</a><ul>
-<li><a href="#mapping-desired-basic_iterator-characteristics-to-cursor-members">Mapping desired <code>basic_iterator</code> characteristics to cursor members</a></li>
 <li><a href="#type-traits-cursor.types">Type traits [cursor.types]</a></li>
 <li><a href="#concepts-cursor.concepts">Concepts [cursor.concepts]</a></li>
 <li><a href="#traits-cursor.traits">Traits [cursor.traits]</a></li>
@@ -39,6 +38,8 @@
 <li><a href="#t-object-access-mixin.access"><code>T</code> object access [mixin.access]</a></li>
 </ul></li>
 <li><a href="#class-template-basic_iterator">Class template <code>basic_iterator</code></a><ul>
+<li><a href="#mapping-desired-basic_iterator-characteristics-to-cursor-members">Mapping desired <code>basic_iterator</code> characteristics to cursor members</a></li>
+<li><a href="#synopsis-basic_iterator.synopsis">Synopsis [basic_iterator.synopsis]</a></li>
 <li><a href="#requirements-basic_iterator.require">Requirements [basic_iterator.require]</a></li>
 <li><a href="#constructors-assignments-and-moves-basic_iterator.cons">Constructors, assignments, and moves [basic_iterator.cons]</a></li>
 <li><a href="#dereferences-basic_iterator.deref">Dereferences [basic_iterator.deref]</a></li>
@@ -127,8 +128,6 @@
 </blockquote>
 <h4 id="cursors-cursor.intro">24.8.9.2  Cursors [cursor.intro]</h4>
 <p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
-<h5 id="mapping-desired-basic_iterator-characteristics-to-cursor-members">24.8.9.2.1  Mapping desired <code>basic_iterator</code> characteristics to cursor members</h5>
-<p>The characteristics of a <code>basic_iterator</code> are determined by which members are present in its Cursor template parameter, C.</p>
 <pre><code>namespace std {
 namespace experimental {
 namespace ranges {
@@ -181,6 +180,10 @@ inline namespace v1 {
       concept bool Sentinel();
     template &lt;class S, class C&gt;
       concept bool SizedSentinel();
+    template &lt;class C&gt;
+      concept bool IndirectMove();
+    template &lt;class C, class O&gt;
+      concept bool IndirectSwap();    
     
     // single_pass trait
     template &lt;class&gt; constexpr bool single_pass = false;
@@ -217,7 +220,7 @@ inline namespace v1 {
     template &lt;class C&gt;
       using category_t = typename category&lt;C&gt;::type;
 }}}}}</code></pre>
-<h5 id="type-traits-cursor.types">24.8.9.2.2  Type traits [cursor.types]</h5>
+<h5 id="type-traits-cursor.types">24.8.9.2.1  Type traits [cursor.types]</h5>
 <p>These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.</p>
 <pre><code>template &lt;class C&gt;
   using mixin_t = <em>see below</em>;  // used by concepts, etc</code></pre>
@@ -246,7 +249,7 @@ inline namespace v1 {
     requires(const C&amp; c) {{c.read()} -&gt; auto&amp;&amp;;}
   using reference_t = <em>see below</em>;  // used by traits, etc.</code></pre>
 <p>Type <code>reference_t</code> is defined as <code>decltype(declval&lt;const C&amp;&gt;().read())</code>.</p>
-<h5 id="concepts-cursor.concepts">24.8.9.2.3  Concepts [cursor.concepts]</h5>
+<h5 id="concepts-cursor.concepts">24.8.9.2.2  Concepts [cursor.concepts]</h5>
 <pre><code>template &lt;class C&gt;
   concept bool Cursor();</code></pre>
 <blockquote>
@@ -271,7 +274,8 @@ inline namespace v1 {
 <pre><code>template &lt;class C&gt;
   concept bool RandomAccess();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>Bidirectional&lt;C&gt;() &amp;&amp; Advance&lt;C&gt;() &amp;&amp; Distance&lt;C, C&gt;()</code>.</p>
+<p><em>Returns:</em> <code>Bidirectional&lt;C&gt;()</code><br />
+ <code>&amp;&amp; Advance&lt;C&gt;() &amp;&amp; SizedSentinel&lt;C, C&gt;()</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C&gt;
   concept bool Contiguous();</code></pre>
@@ -281,18 +285,19 @@ inline namespace v1 {
 <pre><code>template &lt;class C&gt;
   concept bool Readable();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(C&amp; c)</code><br />
- <code>{ typename value_type_t&lt;remove_cv_t&lt;C&gt;&gt;; c.read(); }</code>.</p>
+<p><em>Returns:</em> <code>requires(const C&amp; c)</code><br />
+ <code>{ typename value_type_t&lt;C&gt;; c.read(); }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C, class T&gt;
   concept bool Writable();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(C&amp; c, T&amp;&amp; t) { c.write(static_cast&lt;T&amp;&amp;&gt;(t)); }</code>.</p>
+<p><em>Returns:</em> <code>requires(C&amp; c, T&amp;&amp; t)</code><br />
+ <code>{ c.write(std::forward&lt;T&gt;(t)); }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C&gt;
   concept bool Arrow();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(C&amp; c) { c.arrow(); }</code>.</p>
+<p><em>Returns:</em> <code>requires(const C&amp; c) { c.arrow(); }</code>.</p>
 </blockquote>
 <pre><code>template &lt;class C&gt;
   concept bool Next();</code></pre>
@@ -318,7 +323,7 @@ inline namespace v1 {
 <pre><code>template &lt;class C, class O&gt;
   concept bool HasEqual();</code></pre>
 <blockquote>
-<p><em>Returns:</em> <code>requires(const C&amp; lhs, const Other&amp; rhs)</code><br />
+<p><em>Returns:</em> <code>requires(const C&amp; lhs, const O&amp; rhs)</code><br />
  <code>{{ lhs.equal(rhs) } -&gt; bool;}</code>.</p>
 </blockquote>
 <pre><code>template &lt;class S, class C&gt;
@@ -333,7 +338,17 @@ concept bool SizedSentinel();</code></pre>
 <p><em>Returns:</em> <code>Sentinel&lt;S, C&gt;()&amp;&amp; requires(const C&amp; c, const S&amp; s)</code><br />
  <code>{{c.distance(s)} -&gt; Same&lt;difference_type_t&lt;C&gt;;}</code>.</p>
 </blockquote>
-<h5 id="traits-cursor.traits">24.8.9.2.4  Traits [cursor.traits]</h5>
+<pre><code>template &lt;class C&gt;
+concept bool IndirectMove();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(const C&amp; c) { c.imove(); };</code>.</p>
+</blockquote>
+<pre><code>template &lt;class C, class O&gt;
+concept bool IndirectSwap();</code></pre>
+<blockquote>
+<p><em>Returns:</em> <code>requires(const C&amp; c, const O&amp; o) { c.iswap(o); };</code>.</p>
+</blockquote>
+<h5 id="traits-cursor.traits">24.8.9.2.3  Traits [cursor.traits]</h5>
 <p><em>TBS</em></p>
 <p><span style="background-color:lightgrey"><em>Add to 24.6, Header <code>&lt;experimental/ranges/iterator&gt;</code> synopsis [iterator.synopsis]:</em></span></p>
 <pre><code>  // basic_mixin
@@ -407,6 +422,9 @@ constexpr const T&amp;&amp; get() const&amp;&amp; noexcept;</code></pre>
 <p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
 <h4 id="class-template-basic_iterator">24.8.9.4  Class template <code>basic_iterator</code></h4>
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.</p>
+<h5 id="mapping-desired-basic_iterator-characteristics-to-cursor-members">24.8.9.4.1  Mapping desired <code>basic_iterator</code> characteristics to cursor members</h5>
+<p>The characteristics of a <code>basic_iterator</code> are determined by which members are present in its Cursor template parameter, C.</p>
+<h5 id="synopsis-basic_iterator.synopsis">24.8.9.4.2  Synopsis [basic_iterator.synopsis]</h5>
 <pre><code>namespace std {
 namespace experimental {
 namespace ranges {
@@ -592,12 +610,12 @@ inline namespace v1 {
     const basic_iterator&lt;C&gt;&amp; lhs, const basic_iterator&lt;C&gt;&amp; rhs)
     noexcept(noexcept(!(lhs &lt; rhs)));
 }}}}</code></pre>
-<h5 id="requirements-basic_iterator.require">24.8.9.4.1  Requirements [basic_iterator.require]</h5>
+<h5 id="requirements-basic_iterator.require">24.8.9.4.3  Requirements [basic_iterator.require]</h5>
 <p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
 <p>span style=&quot;background-color:yellow&quot;&gt;<em>We wish to hide implementation details, but it becomes a practical impossibility to describe <code>basic_iterator</code> without describing at least a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></span></p>
-<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.2  Constructors, assignments, and moves [basic_iterator.cons]</h5>
+<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.4.4  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <p><em>TBS</em></p>
-<h5 id="dereferences-basic_iterator.deref">24.8.9.4.3  Dereferences [basic_iterator.deref]</h5>
+<h5 id="dereferences-basic_iterator.deref">24.8.9.4.5  Dereferences [basic_iterator.deref]</h5>
 <pre><code>constexpr decltype(auto) operator*() const
   noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
 <blockquote>
@@ -622,7 +640,7 @@ inline namespace v1 {
 <blockquote>
 <p><em>Returns:</em> <code>cur().arrow()</code>.</p>
 </blockquote>
-<h5 id="modifiers-basic_iterator.mods">24.8.9.4.4  Modifiers [basic_iterator.mods]</h5>
+<h5 id="modifiers-basic_iterator.mods">24.8.9.4.6  Modifiers [basic_iterator.mods]</h5>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
 <blockquote>
 <p><em>Effects:</em> None.</p>
@@ -734,7 +752,7 @@ inline namespace v1 {
 <blockquote>
 <p><em>Returns:</em> <code>*(*this + n)</code>.</p>
 </blockquote>
-<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.5  <code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h5>
+<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.4.7  <code>basic_iterator nonmember</code> functions [basic_iterator.nonmem]</h5>
 <pre><code>template &lt;class C&gt;
   constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
     noexcept(noexcept(i.cur()))</code></pre>

@@ -109,9 +109,6 @@ Namespaces with names reserved to the implementation are for the sake of exposit
 
 Namespace ```cursor``` provides a scope for the type traits, concepts, and other traits needed to describe cursor types.
 
-##### Mapping desired ```basic_iterator``` characteristics to cursor members
-
-The characteristics of a ```basic_iterator``` are determined by which members are present in its Cursor template parameter, C.
 
 ```
 namespace std {
@@ -166,6 +163,10 @@ inline namespace v1 {
       concept bool Sentinel();
     template <class S, class C>
       concept bool SizedSentinel();
+    template <class C>
+      concept bool IndirectMove();
+    template <class C, class O>
+      concept bool IndirectSwap();    
     
     // single_pass trait
     template <class> constexpr bool single_pass = false;
@@ -277,7 +278,8 @@ template <class C>
 template <class C>
   concept bool RandomAccess();
 ```
->*Returns:* ```Bidirectional<C>() && Advance<C>() && Distance<C, C>()```.
+>*Returns:* ```Bidirectional<C>()```
+  ```  && Advance<C>() && SizedSentinel<C, C>()```.
 
 ```
 template <class C>
@@ -289,20 +291,21 @@ template <class C>
 template <class C>
   concept bool Readable();
 ```
->*Returns:* ```requires(C& c)```
-  ``` { typename value_type_t<remove_cv_t<C>>; c.read(); }```.
+>*Returns:* ```requires(const C& c)```
+  ``` { typename value_type_t<C>; c.read(); }```.
 
 ```
 template <class C, class T>
   concept bool Writable();
 ```
->*Returns:* ```requires(C& c, T&& t) { c.write(static_cast<T&&>(t)); }```.
+>*Returns:* ```requires(C& c, T&& t)```
+  ``` { c.write(std::forward<T>(t)); }```.
 
 ```
 template <class C>
   concept bool Arrow();
 ```
->*Returns:* ```requires(C& c) { c.arrow(); }```.
+>*Returns:* ```requires(const C& c) { c.arrow(); }```.
 
 ```
 template <class C>
@@ -333,7 +336,7 @@ template <class C, class O>
 template <class C, class O>
   concept bool HasEqual();
 ```
->*Returns:* ```requires(const C& lhs, const Other& rhs)```
+>*Returns:* ```requires(const C& lhs, const O& rhs)```
   ```{{ lhs.equal(rhs) } -> bool;}```.
 
 ```
@@ -349,6 +352,19 @@ concept bool SizedSentinel();
 ```
 >*Returns:* ```Sentinel<S, C>()&& requires(const C& c, const S& s)```
   ``` {{c.distance(s)} -> Same<difference_type_t<C>;}```.
+
+```
+template <class C>
+concept bool IndirectMove();
+```
+>*Returns:* ```requires(const C& c) { c.imove(); };```.
+
+```
+template <class C, class O>
+concept bool IndirectSwap();
+```
+>*Returns:* ```requires(const C& c, const O& o) { c.iswap(o); };```.
+
 
 ##### Traits [cursor.traits]
 
@@ -447,7 +463,13 @@ constexpr const T&& get() const&& noexcept;
 
 #### Class template ```basic_iterator```
 
-Class template ```basic_iterator``` describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence. 
+Class template ```basic_iterator``` describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.
+
+##### Mapping desired ```basic_iterator``` characteristics to cursor members
+
+The characteristics of a ```basic_iterator``` are determined by which members are present in its Cursor template parameter, C.
+
+##### Synopsis  [basic_iterator.synopsis] 
 
 ```
 namespace std {
