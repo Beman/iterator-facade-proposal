@@ -359,6 +359,8 @@ concept bool IndirectSwap();
  ```&& requires(const C1& c1, const C2& c2)```
  ``` {c1.indirect_swap(c2); c2.indirect_swap(c1);}```.
 
+>*Axiom:* If ```c1.read() == x``` and ```c2.read() == y``` then after either ```c1.indirect_swap(c2)``` or ```c2.indirect_swap(c1)```, ```c1.read() == y``` and ```c2.read() == x```. No diagnostic required.
+
 ```
 template <class C>
   concept bool Input();
@@ -500,95 +502,153 @@ inline namespace v1 {
   
   template <Cursor C>  
   class basic_iterator
-    : public cursor::mixin_t<C>
+    : public mixin_t<C>
   {
-    // types
+  private:
+    // all private members for exposition only 
+    using mixin = mixin_t<C>;
+    using mixin::get;
+
+    using assoc_t = %!{see below}!%;
+    using typename assoc_t::postfix_increment_result_t;
+    using typename assoc_t::reference_t;
+    using typename assoc_t::const_reference_t;
+
     using difference_type = cursor::difference_type_t<C>;
-    
+  public:
+ 
     // constructors, assignments, and moves
     basic_iterator() = default;
-    using mixin_t::mixin_t;
+
+    using mixin::mixin;
+
     template <ConvertibleTo<C> O>
-    constexpr basic_iterator(basic_iterator<O> that)
-      noexcept(is_nothrow_constructible<mixin_t, O&&>::value);
+      constexpr basic_iterator(basic_iterator<O>&& that)
+        noexcept(is_nothrow_constructible<mixin, O&&>::value);
+    template <ConvertibleTo<C> O>
+      constexpr basic_iterator(const basic_iterator<O>& that)
+        noexcept(is_nothrow_constructible<mixin, const O&>::value);
+
+    template <ConvertibleTo<C> O>
+      constexpr basic_iterator& operator=(basic_iterator<O>&& that) &
+        noexcept(is_nothrow_assignable<C&, O&&>::value);
+    template <ConvertibleTo<C> O>
+      constexpr basic_iterator& operator=(const basic_iterator<O>& that) &
+        noexcept(is_nothrow_assignable<C&, const O&>::value);
+
+    template <class T>
+      requires
+        !Same<decay_t<T>, basic_iterator>() &&
+        !cursor::Next<C>() &&
+        cursor::Writable<C, T>()
+      constexpr basic_iterator& operator=(T&& t) &
+        noexcept(noexcept(declval<C&>().write(static_cast<T&&>(t))));
+
     friend constexpr decltype(auto) iter_move(const basic_iterator& i)
-      noexcept(cur().move(i.cur()))
-      requires cursor::Readable<C>() && cursor::Move<C>();
+        noexcept(noexcept(i.get().indirect_move()))
+      requires cursor::IndirectMove<C>();
+
+    template <class O>
+      requires cursor::IndirectSwap<C, O>()
+    friend constexpr void iter_swap(
+      const basic_iterator& x, const basic_iterator<O>& y)
+        noexcept(noexcept((void)x.indirect_swap(y));
     
     // dereferences
     constexpr decltype(auto) operator*() const
       noexcept(noexcept(declval<const C&>().read()))
-    constexpr decltype(auto) operator*() noexcept
-      requires cursor::is_writable<C>;
-    constexpr decltype(auto) operator*() const noexcept
-      requires cursor::is_writable<C>;
+        requires cursor::Readable<C>() && !detail::is_writable<C>;
+    constexpr decltype(auto) operator*()
+      noexcept(noexcept(reference_t{declval<mixin&>().get()}))
+        requires cursor::Next<C>() && detail::is_writable<C>;
+    constexpr decltype(auto) operator*() const
+      noexcept(noexcept(
+          const_reference_t{declval<const mixin&>().get()}))
+        requires cursor::Next<C>() && detail::is_writable<C>;
+    constexpr basic_iterator& operator*() noexcept
+      requires !cursor::Next<C>();
+
+    // operator->: "Manual" deduction override,
     constexpr decltype(auto) operator->() const
       noexcept(noexcept(declval<const C&>().arrow()))
-      requires cursor::Arrow<const C>();
+        requires cursor::Arrow<C>();
+    // operator->: Otherwise, if reference_t is an lvalue reference,
+    constexpr auto operator->() const //  Otherwise, if reference_t is an lvalue reference
+      noexcept(noexcept(*declval<const basic_iterator&>()))
+        requires cursor::Readable<C>() && !cursor::Arrow<C>()
+          && is_lvalue_reference<const_reference_t>::value;
+    // operator->: Otherwise, deduce if needed
+    constexpr auto operator->() const
+      noexcept(is_nothrow_move_constructible<
+               detail::operator_arrow_proxy<basic_iterator>>::value &&
+             noexcept(detail::operator_arrow_proxy<basic_iterator>{
+                        *declval<const basic_iterator&>()}))
+      requires cursor::Readable<C>() && !cursor::Arrow<C>()
+        && !is_reference<const_reference_t>::value;
          
     // modifiers
     constexpr basic_iterator& operator++() & noexcept;
     constexpr basic_iterator& operator++() &
       noexcept(noexcept(declval<C&>().next()))
       requires cursor::Next<C>();
-    constexpr basic_iterator& operator++(int) & noexcept;
+
     constexpr postfix_increment_result_t operator++(int) &
       noexcept(is_nothrow_constructible<postfix_increment_result_t,
         basic_iterator&>::value
-        && is_nothrow_move_constructible<postfix_increment_result_t>::value &&
-             noexcept(++declval<basic_iterator&>()))
-      requires cursor::Next<C>();
+        && is_nothrow_move_constructible<postfix_increment_result_t>::value
+        && noexcept(++declval<basic_iterator&>()));
+
     constexpr basic_iterator& operator--() &
       noexcept(noexcept(declval<C&>().prev()))
       requires cursor::Bidirectional<C>();
+
     constexpr basic_iterator operator--(int) &
       noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
              is_nothrow_move_constructible<basic_iterator>::value &&
              noexcept(--declval<basic_iterator&>()))
       requires cursor::Bidirectional<C>();
+
     constexpr basic_iterator& operator+=(difference_type n) &
       noexcept(noexcept(declval<C&>().advance(n)))
       requires cursor::RandomAccess<C>();
+
     constexpr basic_iterator& operator-=(difference_type n) &
       noexcept(noexcept(declval<C&>().advance(-n)))
-      requires cursor::RandomAccess<C>();  
-    friend constexpr basic_iterator
-      operator+(const basic_iterator& i, difference_type n)
-        noexcept(is_nothrow_copy_constructible<basic_iterator>::value &&
-             is_nothrow_move_constructible<basic_iterator>::value &&
-             noexcept(declval<C&>().advance(n)))
-        requires cursor::RandomAccess<C>();
-    friend constexpr basic_iterator
-      operator+(difference_type n, const basic_iterator& i)
-        noexcept(noexcept(i + n))
-        requires cursor::RandomAccess<C>();
-    friend constexpr basic_iterator
-      operator-(const basic_iterator& i, difference_type n)
-        noexcept(noexcept(i + -n))
-        requires cursor::RandomAccess<C>();    
+      requires cursor::RandomAccess<C>();
+    
     constexpr decltype(auto) operator[](difference_type n) const
       noexcept(noexcept(*(declval<basic_iterator&>() + n)))
       requires cursor::RandomAccess<C>();
-  private:  %!{// all private members are exposition only}!% 
-    // types   
-    using mixin_t = cursor::mixin_t<C>;
-    using assoc_t = %!{see below}!%;
-   
-    // constructors
-    using typename assoc_t::postfix_increment_result_t;
-    using typename assoc_t::reference_t;
-    using typename assoc_t::const_reference_t;
- 
-    // mixin cursor object access
-    constexpr C& cur() &
-      noexcept(noexcept(declval<mixin_t&>().get()))
-        { return mixin_t::get(); }
-    constexpr const C& cur() const&
-      noexcept(noexcept(declval<const mixin_t&>().get()))
-        { return mixin_t::get(); }
-    constexpr C&& cur() &&
-      noexcept(noexcept(declval<mixin_t&>().get()))
-        { return mixin_t::get(); }
+
+    // non-template type-symmetric ops to enable implicit conversions
+    friend constexpr difference_type operator-(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(y.get().distance_to(x.get())))
+      requires cursor::SizedSentinel<C, C>();
+    friend constexpr bool operator==(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(x.get().equal(y.get())))
+      requires cursor::Sentinel<C, C>();
+    friend constexpr bool operator!=(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(!(x == y)))
+      requires cursor::Sentinel<C, C>();
+    friend constexpr bool operator<(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(x - y))
+      requires cursor::SizedSentinel<C, C>();
+    friend constexpr bool operator>(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(x - y))
+      requires cursor::SizedSentinel<C, C>();
+    friend constexpr bool operator<=(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(x - y))
+      requires cursor::SizedSentinel<C, C>();
+    friend constexpr bool operator>=(
+        const basic_iterator& x, const basic_iterator& y)
+      noexcept(noexcept(x - y))
+      requires cursor::SizedSentinel<C, C>();
   };
   
   // basic_iterator nonmember traits

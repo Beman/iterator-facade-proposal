@@ -7,11 +7,13 @@ digraph iterator_concepts
   // Nodes
   
   advance [label="Advance<C>\nrequires(C& c, difference_type_t<C> n)\n{c.advance(n);}" shape=box]
-  arrow [label="Arrow<C>\nrequires(const C& c) {STL2_DEDUCE_AUTO_REF_REF(c.arrow());}" shape=box]
+  arrow [label="Arrow<C>\nrequires(const C& c)\n{STL2_DEDUCE_AUTO_REF_REF\n(c.arrow());}" shape=box]
   contiguous [label="Contiguous<C>\ncontiguous<C>::value" shape=box]
   cursor [label="Cursor<C>\nrequires {typename difference_type_t<C>;}" shape=box]
   bidirectional [label="Bidirectional<C>" shape=box]
   forward [label="Forward<C>\n!single_pass<C>::value" shape=box]
+  indirectmove [label="IndirectMove<C>\nrequires(const C& c)\n{STL2_DEDUCE_AUTO_REF_REF\n(c.indirect_move());}" shape=box]
+  indirectswap [label="IndirectSwap<C1, C2\nrequires(const C1& c1, const C2& c2)\n{c1.indirect_swap(c2);\nc2.indirect_swap(c1);}" shape=box]
   input [label="Input<C>" shape=box]
   next [label="Next<C>\nrequires(C& c)\ncontiguous{c.next();}" shape=box]
   prev [label="Prev<C>\nrequires(C& c)\n{c.prev();}" shape=box]
@@ -20,9 +22,9 @@ digraph iterator_concepts
   semiregular [label="std::Semiregular<C>" shape=box]
   semiregular_mx [label="std::Semiregular<mixin_t<C>>" shape=box]
   semiregular_s [label="std::Semiregular<S>" shape=box]
-  sentinel [label="Sentinel<S,C>\nrequires(const C& c, const S& s) {{c.equal(s)}->bool;}" shape=box]
-  sizedsentinel [label="SizedSentinel<S, C>\nrequires(const C& c, const S& s)\n{{c.distance(s)}->std::Same<difference_type_t<C>;}" shape=box]
-  writable [label="Writable<C>/nrequires(C& c, T&& t) {c.write(stl::forward<T>(t));}" shape=box]
+  sentinel [label="Sentinel<S,C>\nrequires(const C& c, const S& s)\n{{c.equal(s)}->bool;}" shape=box]
+  sizedsentinel [label="SizedSentinel<S, C>\nrequires(const C& c, const S& s)\n{{c.distance(s)}->\nstd::Same<difference_type_t<C>;}" shape=box]
+  writable [label="Writable<C>\nrequires(C& c, T&& t)\n{c.write(stl::forward<T>(t));}" shape=box]
    
   // Edges
   
@@ -55,5 +57,9 @@ digraph iterator_concepts
   randomaccess -> sizedsentinel;
   
   contiguous -> randomaccess;
+
+  indirectmove -> readable;
+
+  indirectswap -> readable;
 
 }
