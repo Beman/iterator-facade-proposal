@@ -7,25 +7,38 @@ digraph iterator_concepts
   // Nodes
   
   advance [label="Advance<C>\nrequires(C& c, difference_type_t<C> n)\n{c.advance(n);}" shape=box]
+  arrow [label="Arrow<C>\nrequires(const C& c) {STL2_DEDUCE_AUTO_REF_REF(c.arrow());}" shape=box]
   contiguous [label="Contiguous<C>\ncontiguous<C>::value" shape=box]
-  cursor [label="Cursor<C>" shape=box]
+  cursor [label="Cursor<C>\nrequires {typename difference_type_t<C>;}" shape=box]
   bidirectional [label="Bidirectional<C>" shape=box]
   forward [label="Forward<C>\n!single_pass<C>::value" shape=box]
-  hasequals [label="HasEquals<C, O>\nrequires(const C& lhs, const O& rhs)\n{{ lhs.equal(rhs) }->bool;}" shape=box]
   input [label="Input<C>" shape=box]
   next [label="Next<C>\nrequires(C& c)\ncontiguous{c.next();}" shape=box]
   prev [label="Prev<C>\nrequires(C& c)\n{c.prev();}" shape=box]
   randomaccess [label="RandomAccess<C>" shape=box]
-  readable [label="Readable<C>\nrequires(const C& c)\n{typename value_type_t<C>; c.read();}" shape=box]
+  readable [label="Readable<C>\nrequires(const C& c)\n{typename reference_t<C>;\ntypename value_type_t<C>; c.read();}" shape=box]
   semiregular [label="std::Semiregular<C>" shape=box]
   semiregular_mx [label="std::Semiregular<mixin_t<C>>" shape=box]
-  sentinel [label="Sentinel<S,C>\nrequires(const C& c, const S& s)\n{c.equal(s);}" shape=box]
+  semiregular_s [label="std::Semiregular<S>" shape=box]
+  sentinel [label="Sentinel<S,C>\nrequires(const C& c, const S& s) {{c.equal(s)}->bool;}" shape=box]
   sizedsentinel [label="SizedSentinel<S, C>\nrequires(const C& c, const S& s)\n{{c.distance(s)}->std::Same<difference_type_t<C>;}" shape=box]
+  writable [label="Writable<C>/nrequires(C& c, T&& t) {c.write(stl::forward<T>(t));}" shape=box]
    
   // Edges
   
   cursor -> semiregular;
   cursor -> semiregular_mx;
+
+  readable -> cursor;
+
+  writable -> cursor;
+
+  arrow -> readable;
+
+  sentinel -> cursor;
+  sentinel -> semiregular_s;
+  
+  sizedsentinel -> sentinel;
   
   input -> cursor;
   input -> readable;
@@ -34,16 +47,12 @@ digraph iterator_concepts
   forward -> input;
   forward -> sentinel;
   
-  sentinel -> cursor;
-  
   bidirectional -> forward;
   bidirectional -> prev;
   
   randomaccess -> bidirectional;
   randomaccess -> advance;
   randomaccess -> sizedsentinel;
-  
-  sizedsentinel -> sentinel;
   
   contiguous -> randomaccess;
 

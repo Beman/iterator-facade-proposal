@@ -116,58 +116,9 @@ namespace experimental {
 namespace ranges {
 inline namespace v1 {
   namespace cursor {
-
-    // type traits
-    template <class C>
-      using mixin_t = %!{see below}!%;
-    template <class C>
-      requires %!{see below}!%
-      using value_type_t = %!{see below}!%;
-    template <class C>
-      using difference_type_t = %!{see below}!%;
-    template <class C>
-      requires
-        requires(const C& c) {{c.read()} -> auto&&;}
-      using reference_t = %!{see below}!%;
-      
-    // concepts
-    template <class C>
-      concept bool Cursor();
-    template <class C>
-      concept bool Input();
-    template <class C>
-      concept bool Forward();
-    template <class C>
-      concept bool Bidirectional();
-    template <class C>
-      concept bool RandomAccess();
-    template <class C>
-      concept bool Contiguous();
-    template <class C>
-      concept bool Readable();
-    template <class C, class T>
-      concept bool Writable();
-    template <class C>
-      concept bool Arrow();
-    template <class C>
-      concept bool Next();
-    template <class C>
-      concept bool Prev();
-    template <class C>
-      concept bool Advance();
-    template <class C, class O>
-      concept bool Distance();
-    template <class C, class O>
-      concept bool HasEqual();
-    template <class S, class C>
-      concept bool Sentinel();
-    template <class S, class C>
-      concept bool SizedSentinel();
-    template <class C>
-      concept bool IndirectMove();
-    template <class C, class O>
-      concept bool IndirectSwap();    
     
+    // Cursor traits 
+
     // single_pass trait
     template <class> constexpr bool single_pass = false;
     template <class C>
@@ -183,7 +134,6 @@ inline namespace v1 {
       requires requires {
         typename C::contiguous;
         requires bool(C::contiguous::value);
-        requires is_reference<reference_t<C>>::value;
       }
     constexpr bool contiguous = true;
 
@@ -202,10 +152,88 @@ inline namespace v1 {
       struct category<C> { using type = ext::contiguous_iterator_tag; };
     template <class C>
       using category_t = typename category<C>::type;
+
+    // types
+    template <class C>
+      using mixin_t = %!{see below}!%;
+    template <class C>
+      requires %!{see below}!%
+      using value_type_t = %!{see below}!%;
+    template <class C>
+      using difference_type_t = %!{see below}!%;
+    template <class C>
+      requires
+        requires(const C& c) {{c.read()} -> auto&&;}
+      using reference_t = %!{see below}!%;
+      
+    // concepts
+    template <class C>
+      concept bool Cursor();
+    template <class C>
+      concept bool Readable();
+    template <class C>
+      concept bool Arrow();
+    template <class C, class T>
+      concept bool Writable();
+    template <class S, class C>
+      concept bool Sentinel();
+    template <class S, class C>
+      concept bool SizedSentinel();
+    template <class C>
+      concept bool Next();
+    template <class C>
+      concept bool Prev();
+    template <class C>
+      concept bool Advance();
+    template <class C>
+      concept bool IndirectMove();
+    template <class C, class O>
+      concept bool IndirectSwap();    
+    template <class C>
+      concept bool Input();
+    template <class C>
+      concept bool Forward();
+    template <class C>
+      concept bool Bidirectional();
+    template <class C>
+      concept bool RandomAccess();
+    template <class C>
+      concept bool Contiguous();
 }}}}}
 ```
 
-##### Type traits  [cursor.types]
+##### Cursor traits  [cursor.traits]
+
+###### <code>single_pass</code> [cursor.single]
+
+```
+template <class> constexpr bool single_pass = false;
+template <class C>
+  requires requires {
+    typename C::single_pass;
+    requires bool(C::single_pass::value);
+  }
+constexpr bool single_pass = true;
+```
+
+```using single_pass = stl::true_type;``` is defined by a cursor to specify to ```basic_iterator``` that the cursor does not satisfy the ```cursor::ForwardIterator``` concept despited satisfying the ```cursor::InputIterator``` and ```cursor::EqualityComparable``` concepts. 
+
+###### <code>contiguous</code> [cursor.contig]
+
+```
+template <class> constexpr bool contiguous = false;
+template <class C>
+  requires requires {
+    typename C::contiguous;
+    requires bool(C::contiguous::value);
+  }
+constexpr bool contiguous = true;
+```
+
+```using contiguous = stl::true_type;``` is defined by a cursor to specify to ```basic_iterator``` that the cursor satisfies the ```cursor::Contiguous``` concept if it also satisfies the ```cursor::RandomAccess``` concept.
+
+
+###### Types
 
 These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.
 
@@ -253,20 +281,95 @@ Type ```reference_t``` is defined as ```decltype(declval<const C&>().read())```.
 template <class C>
   concept bool Cursor();
 ```
->*Returns:* ```Semiregular<C>() && Semiregular<mixin_t<C>>()```.
+>*Returns:* ```Semiregular<remove_cv_t<C>>()```
+ ``` && Semiregular<mixin_t<remove_cv_t<C>>>()```
+ ``` && requires {typename difference_type_t<C>;}```.
+
+```
+template <class C>
+  concept bool Readable();
+```
+>*Returns:* ```Cursor<C>() && requires(const C& c) {```
+  &nbsp;&nbsp;&nbsp;&nbsp;```STL2_DEDUCE_AUTO_REF_REF(c.read());```
+  &nbsp;&nbsp;&nbsp;&nbsp;```typename reference_t<C>;```
+  &nbsp;&nbsp;&nbsp;&nbsp;```typename value_type_t<C>;```
+  ```}```.
+
+```
+template <class C>
+  concept bool Arrow();
+```
+>*Returns:* ```Readable<C>()```
+  ```&& requires(const C& c) {STL2_DEDUCE_AUTO_REF_REF(c.arrow());}```.
+
+```
+template <class C, class T>
+  concept bool Writable();
+```
+>*Returns:* ```Cursor<C>()```
+  ```&& requires(C& c, T&& t) {c.write(stl::forward<T>(t));}```.
+
+>*Remarks:* Not required to be equality-preserving.
+
+```
+template <class S, class C>
+  concept bool Sentinel();
+```
+>*Returns:* ```Cursor<C>() && Semiregular<S>()```
+  ```&& requires(const C& c, const S& s) {{c.equal(s)} -> bool;}```.
+
+```
+template <class S, class C>
+concept bool SizedSentinel();
+```
+>*Returns:* ```Sentinel<S, C>()&& requires(const C& c, const S& s)```
+  ``` {{c.distance(s)} -> Same<difference_type_t<C>;}```.
+
+```
+template <class C>
+  concept bool Next();
+```
+>*Returns:* ```Cursor<C>() && requires(C& c) {c.next();}```.
+
+```
+template <class C>
+  concept bool Prev();
+```
+>*Returns:* ```Cursor<C>() && requires(C& c) {c.prev();}```.
+
+```
+template <class C>
+  concept bool Advance();
+```
+>*Returns:* ```Cursor<C>()```
+ ``` && requires(C& c, difference_type_t<C> n) {c.advance(n);}```.
+
+```
+template <class C>
+concept bool IndirectMove();
+```
+>*Returns:* ```Readable<C>()```
+ ``` && requires(const C& c) {c.indirect_move();};```.
+
+```
+template <class C1, class C2>
+concept bool IndirectSwap();
+```
+>*Returns:* ```Readable<C1>() && Readable<C2>()```
+ ```&& requires(const C1& c1, const C2& c2)```
+ ``` {c1.indirect_swap(c2); c2.indirect_swap(c1);}```.
 
 ```
 template <class C>
   concept bool Input();
 ```
->*Returns:* ```Cursor<C>() && Readable<C>() && Next<C>()```.
+>*Returns:* ```Readable<C>() && Next<C>()```.
 
 ```
 template <class C>
   concept bool Forward();
 ```
->*Returns:* ```Input<C>() && Sentinel<C, C>()```
-  ```&& !single_pass<C>::value```.
+>*Returns:* ```Input<C>() && Sentinel<C, C>() && !single_pass<C>```.
 
 ```
 template <class C>
@@ -285,90 +388,8 @@ template <class C>
 template <class C>
   concept bool Contiguous();
 ```
->*Returns:* ```RandomAccess<C>() && contiguous<C>::value```.
-
-```
-template <class C>
-  concept bool Readable();
-```
->*Returns:* ```requires(const C& c)```
-  ``` { typename value_type_t<C>; c.read(); }```.
-
-```
-template <class C, class T>
-  concept bool Writable();
-```
->*Returns:* ```requires(C& c, T&& t)```
-  ``` { c.write(std::forward<T>(t)); }```.
-
-```
-template <class C>
-  concept bool Arrow();
-```
->*Returns:* ```requires(const C& c) { c.arrow(); }```.
-
-```
-template <class C>
-  concept bool Next();
-```
->*Returns:* ```requires(C& c) { c.next(); }```.
-
-```
-template <class C>
-  concept bool Prev();
-```
->*Returns:* ```requires(C& c) { c.prev(); }```.
-
-```
-template <class C>
-  concept bool Advance();
-```
->*Returns:* ```requires(C& c, difference_type_t<C> n) { c.advance(n); }```.
-
-```
-template <class C, class O>
-  concept bool Distance();
-```
->*Returns:* ```requires(const C& lhs, const Other& rhs)```
-  ```{{ lhs.distance_to(rhs) } -> Same<difference_type_t<C>>; }```.
-
-```
-template <class C, class O>
-  concept bool HasEqual();
-```
->*Returns:* ```requires(const C& lhs, const O& rhs)```
-  ```{{ lhs.equal(rhs) } -> bool;}```.
-
-```
-template <class S, class C>
-  concept bool Sentinel();
-```
->*Returns:* ```Cursor<C>()```
-  ```&& requires(const C& c, const S& s) {c.equal(s); };}```.
-
-```
-template <class S, class C>
-concept bool SizedSentinel();
-```
->*Returns:* ```Sentinel<S, C>()&& requires(const C& c, const S& s)```
-  ``` {{c.distance(s)} -> Same<difference_type_t<C>;}```.
-
-```
-template <class C>
-concept bool IndirectMove();
-```
->*Returns:* ```requires(const C& c) { c.imove(); };```.
-
-```
-template <class C, class O>
-concept bool IndirectSwap();
-```
->*Returns:* ```requires(const C& c, const O& o) { c.iswap(o); };```.
-
-
-##### Traits [cursor.traits]
-
-*TBS*
+>*Returns:* ```RandomAccess<C>() && contiguous<C>```
+ ``` && is_reference<reference_t<C>>::value```.
 
 <span style="background-color:lightgrey">*Add to 24.6, Header ```<experimental/ranges/iterator>``` synopsis [iterator.synopsis]:*</span>
 
