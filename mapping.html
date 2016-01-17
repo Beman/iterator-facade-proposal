@@ -1,0 +1,124 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Mapping desired</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+    <td align="center"><b><i>Member<br>
+    name</i></b></td>
+    <td align="center"><b><i>Required by<br>
+    Concept</i></b></td>
+    <td align="center"><i><b>Cursor member requirement summary</b></i></td>
+  </tr>
+  <tr>
+    <td><code>read</code></td>
+    <td><code>Readable&lt;C&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">
+    <p dir="ltr"><code>requires(</code></font><code><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font></code><font FACE="Consolas" SIZE="2"><code> 
+    C&amp; c)<br>
+&nbsp; {</code><font FACE="Consolas" SIZE="2" COLOR="#cd5c5c">{c.read()} -&gt; 
+    auto&amp;&amp;;</font></font><font FACE="Consolas" SIZE="2" COLOR="#0000ff"><code><br>
+&nbsp;&nbsp;&nbsp; typename</code></font><font FACE="Consolas" SIZE="2"><code> 
+    reference_t&lt;C&gt;;<br>
+&nbsp;&nbsp;&nbsp; </code></font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">
+    <code>typename</code></font><font FACE="Consolas" SIZE="2"><code> 
+    value_type_t&lt;C&gt;;}</code></font></td>
+  </tr>
+  <tr>
+    <td><code>arrow</code></td>
+    <td><code>Arrow&lt;C&gt;</code></td>
+    <td><font face="Consolas" size="2"><code>requires(const C&amp; c) </code></font>
+    <font FACE="Consolas" SIZE="2" COLOR="#cd5c5c"><b>{{</b></font><font FACE="Consolas" SIZE="2" COLOR="#800080">c.arrow()}</font><font FACE="Consolas" SIZE="2" COLOR="#cd5c5c">
+    </font><font FACE="Consolas" SIZE="2" COLOR="#800080">-&gt;</font><font FACE="Consolas" SIZE="2" COLOR="#cd5c5c">
+    </font><font FACE="Consolas" SIZE="2" COLOR="#800080">auto&amp;&amp;;}</font></td>
+  </tr>
+  <tr>
+    <td><code>next</code></td>
+    <td><code>Next&lt;C&gt;</code></td>
+    <td><code>requires(C&amp; c) {c.next();}</code></td>
+  </tr>
+  <tr>
+    <td><code>prev</code></td>
+    <td><code>Prev&lt;C&gt;</code></td>
+    <td><code>requires(C&amp; c) {c.prev();}</code></td>
+  </tr>
+  <tr>
+    <td><code>indirect_move</code></td>
+    <td><code>IndirectMove&lt;C&gt;</code></td>
+    <td><code>requires(const C&amp; c) {c.indirect_move();}</code></td>
+  </tr>
+  <tr>
+    <td><code>indirect_swap</code></td>
+    <td><code>IndirectSwap&lt;C1, C2&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">requires(</font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    C1&amp; c1, </font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    C2&amp; c2)<br>
+    </font><code>&nbsp; {c1.indirect_swap(c2);<br>
+&nbsp;&nbsp; c2.indirect_swap(c1);}</code></td>
+  </tr>
+  <tr>
+    <td><code>advance</code></td>
+    <td><code>Advance&lt;C&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">requires(C&amp; c, difference_type_t&lt;C&gt; n)|<br>
+&nbsp; {c.advance(n);}</font></td>
+  </tr>
+  <tr>
+    <td><code>write</code></td>
+    <td><code>Writable&lt;C, T&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">requires(C&amp; c, T&amp;&amp; t)<br>
+&nbsp; {c.write(range::forward&lt;T&gt;(t));}</font></td>
+  </tr>
+  <tr>
+    <td><code>distance_to</code></td>
+    <td><code>SizedSentinel&lt;S, C&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">requires(</font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    C&amp; c, </font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    S&amp; s)<br>
+&nbsp; {{c.distance_to(s)}-&gt;Same&lt;difference_type_t&lt;C&gt;;}</font></td>
+  </tr>
+  <tr>
+    <td><code>equal</code></td>
+    <td><code>Sentinel&lt;S, C&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">requires(</font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    C&amp; c, </font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">const</font><font FACE="Consolas" SIZE="2"> 
+    S&amp; s)<br>
+&nbsp; {{c.equal(s)}-&gt;</font><font FACE="Consolas" SIZE="2" COLOR="#0000ff">bool</font><font FACE="Consolas" SIZE="2">;}</font></td>
+  </tr>
+  <tr>
+    <td><code>single_pass::value</code></td>
+    <td><code>Forward&lt;C&gt;</code></td>
+    <td><code>bool single_pass::value&nbsp; </code>default: <code>=false</code></td>
+  </tr>
+  <tr>
+    <td><code>contiguous::value</code></td>
+    <td><code>Contiguous&lt;C&gt;</code></td>
+    <td><font FACE="Consolas" SIZE="2">is_reference&lt;reference_t&lt;C&gt;&gt;::value</font><code> </code>
+    default: <code>=false</code></td>
+  </tr>
+  <tr>
+    <td><code>mixin</code></td>
+    <td><code>Cursor&lt;C&gt;</code></td>
+    <td><code>type mixin&nbsp; </code>default: <code>=basic_mixin&lt;C&gt; </code></td>
+  </tr>
+  <tr>
+    <td><code>value_type</code></td>
+    <td><code>Readable&lt;C&gt;</code></td>
+    <td>
+    <p dir="ltr"><code>type value_type&nbsp; </code>default: <code>=decay_t&lt;reference_t&lt;C&gt;&gt;
+    </code></td>
+  </tr>
+  </table>
+
+<p>&nbsp;</p>
+
+</body>
+
+</html>
