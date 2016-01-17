@@ -80,7 +80,7 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 ### Basic Iterators [iterators.basic]
 
-Class template ```basic_iterator``` is an iterator adaptor that iterates over a sequence provided by a cursor type.  [*Note:* ```basic_iterator``` eases creation of conforming iterators because cursors are simpler to create than iterators. *-- end note*] Cursors are implementation details that are encapsulated as mixins so that they are hidden from users of an instantiation of ```basic_iterator```.
+Class template ```basic_iterator``` is an iterator adaptor that iterates over a sequence provided by a cursor type.  [*Note:* ```basic_iterator``` eases creation of conforming iterators because cursors are simpler to create than iterators. *-- end note*] Cursors are implementation details of a  ```basic_iterator``` instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.
 
 [*Example:*
 
@@ -97,18 +97,19 @@ Class template ```basic_iterator``` is an iterator adaptor that iterates over a 
   * [Class template ```basic_mixin```](#iterator-mixin) describes mixin types.
   * [Class template ```basic_iterator```](#basic_iterator) describes ```basic_iterator```.
 
-#### Method of description (Informative)
-
-Simple concepts that require no further description are defined entirely in the appropriate synopsis and no further description is provided.
-
-Namespaces with names reserved to the implementation are for the sake of exposition  only. Implementations are not required to provide the concepts declared in these namespaces. Implementations are permitted to elide use of such exposition only concepts as long as the requirements the concepts describe are met by some other mechanism.
-
->[Note: This constitutes an "as if" rule for exposition-only concepts that allows implementations freedom to refactor such concepts or use other mechanisms, such as template metaprogramming, as long as the requirements imposed are met. -- end note]
-
 #### Cursors [cursor.intro]
 
 Namespace ```cursor``` provides a scope for the type traits, concepts, and other traits needed to describe cursor types.
 
+Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table.  The table is informational; the actual requirements are given by the concept descriptions that follow.
+
+<span style="background-color:yellow">*Insert mapping.html table here*</span>
+
+Cursor members shown with defaults are only required if the default is not appropriate.
+
+<span style="background-color:yellow">*Possibly insert Cursor Concepts graph here?*</span>
+
+##### Namespace cursor synopsis [cursor.synopsis]
 
 ```
 namespace std {
@@ -290,7 +291,7 @@ template <class C>
   concept bool Readable();
 ```
 >*Returns:* ```Cursor<C>() && requires(const C& c) {```
-  &nbsp;&nbsp;&nbsp;&nbsp;```STL2_DEDUCE_AUTO_REF_REF(c.read());```
+  &nbsp;&nbsp;&nbsp;&nbsp;```{c.read()} -> auto&&;```
   &nbsp;&nbsp;&nbsp;&nbsp;```typename reference_t<C>;```
   &nbsp;&nbsp;&nbsp;&nbsp;```typename value_type_t<C>;```
   ```}```.
@@ -300,7 +301,7 @@ template <class C>
   concept bool Arrow();
 ```
 >*Returns:* ```Readable<C>()```
-  ```&& requires(const C& c) {STL2_DEDUCE_AUTO_REF_REF(c.arrow());}```.
+  ```&& requires(const C& c) {{c.arrow()} -> auto&&;}```.
 
 ```
 template <class C, class T>
@@ -323,7 +324,7 @@ template <class S, class C>
 concept bool SizedSentinel();
 ```
 >*Returns:* ```Sentinel<S, C>()&& requires(const C& c, const S& s)```
-  ``` {{c.distance(s)} -> Same<difference_type_t<C>;}```.
+  ``` {{c.distance_to(s)} -> Same<difference_type_t<C>;}```.
 
 ```
 template <class C>
@@ -349,7 +350,7 @@ template <class C>
 concept bool IndirectMove();
 ```
 >*Returns:* ```Readable<C>()```
- ``` && requires(const C& c) {c.indirect_move();};```.
+ ``` && requires(const C& c) {c.indirect_move()} -> auto&&;};```.
 
 ```
 template <class C1, class C2>
@@ -486,11 +487,7 @@ constexpr const T&& get() const&& noexcept;
 
 #### Class template ```basic_iterator```
 
-Class template ```basic_iterator``` describes an iterator over a sequence. A type satisfying the Cursor requirements provides the sequence.
-
-##### Mapping desired ```basic_iterator``` characteristics to cursor members
-
-The characteristics of a ```basic_iterator``` are determined by which members are present in its Cursor template parameter, C.
+Class template ```basic_iterator``` describes an iterator over a sequence. A ```basic_iterator``` instantiation satisfies concept ```range::Iterator```.  Which of the other iterator concepts will be satisfied is determined by which cursor concepts <span style="background-color:yellow">*(reference)*</span> are satisfied by the ```basic_iterator``` template parameter ```C```.
 
 ##### Synopsis  [basic_iterator.synopsis] 
 
