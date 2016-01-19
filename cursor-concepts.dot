@@ -1,19 +1,22 @@
 digraph iterator_concepts
 {
-  graph [fontname = "courier"];
-  node [fontname = "courier"];
-  edge [fontname = "courier"];
+  size ="14,14"
+  ratio=compress
+  concentrate=true
+  graph [fontname = "courier" fontsize = 18.0];
+  node [fontname = "courier" fontsize = 18.0];
+  edge [fontname = "courier" fontsize = 18.0];
 
   // Nodes
   
-  advance [label="Advance<C>\nrequires(C& c, difference_type_t<C> n)\n{c.advance(n);}" shape=box]
-  arrow [label="Arrow<C>\nrequires(const C& c)\n{{c.arrow()} -> auto&&;}" shape=box]
+  advance [label="Advance<C>\nrequires\n(C& c, difference_type_t<C> n)\n{c.advance(n);}" shape=box]
+  arrow [label="Arrow<C>\nrequires(const C& c)\n{{c.arrow()}->auto&&;}" shape=box]
   contiguous [label="Contiguous<C>\ncontiguous<C>::value" shape=box]
   cursor [label="Cursor<C>\nrequires {typename difference_type_t<C>;}" shape=box]
   bidirectional [label="Bidirectional<C>" shape=box]
   forward [label="Forward<C>\n!single_pass<C>::value" shape=box]
-  indirectmove [label="IndirectMove<C>\nrequires(const C& c)\n{{c.indirect_move()} -> auto&&;}" shape=box]
-  indirectswap [label="IndirectSwap<C1, C2\nrequires(const C1& c1, const C2& c2)\n{c1.indirect_swap(c2);\nc2.indirect_swap(c1);}" shape=box]
+  indirectmove [label="IndirectMove<C>\nrequires(const C& c)\n{{c.indirect_move()}->auto&&;}" shape=box]
+  indirectswap [label="IndirectSwap<C1, C2>\nrequires\n(const C1& c1, const C2& c2)\n{c1.indirect_swap(c2);\nc2.indirect_swap(c1);}" shape=box]
   input [label="Input<C>" shape=box]
   next [label="Next<C>\nrequires(C& c)\n{c.next();}" shape=box]
   prev [label="Prev<C>\nrequires(C& c)\n{c.prev();}" shape=box]
@@ -22,7 +25,7 @@ digraph iterator_concepts
   semiregular [label="std::Semiregular<C>" shape=box]
   semiregular_mx [label="std::Semiregular<mixin_t<C>>" shape=box]
   semiregular_s [label="std::Semiregular<S>" shape=box]
-  sentinel [label="Sentinel<S,C>\nrequires(const C& c, const S& s)\n{{c.equal(s)}->bool;}" shape=box]
+  sentinel [label="Sentinel<S,C>\nrequires\n(const C& c, const S& s)\n{{c.equal(s)}->bool;}" shape=box]
   sizedsentinel [label="SizedSentinel<S, C>\nrequires(const C& c, const S& s)\n{{c.distance_to(s)}->\nstd::Same<difference_type_t<C>;}" shape=box]
   writable [label="Writable<C, T>\nrequires(C& c, T&& t)\n{c.write(stl::forward<T>(t));}" shape=box]
    

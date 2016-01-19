@@ -109,6 +109,8 @@ Cursor members shown with defaults are only required if the default is not appro
 
 <span style="background-color:yellow">*Possibly insert Cursor Concepts graph here?*</span>
 
+<img src="cursor-concepts.png" alt="Oops!" style="width:100%;"> 
+
 ##### Namespace cursor synopsis [cursor.synopsis]
 
 ```
