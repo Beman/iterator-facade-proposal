@@ -103,7 +103,7 @@ Namespace ```cursor``` provides a scope for the type traits, concepts, and other
 
 Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table.  The table is informational; the actual requirements are given by the concept descriptions that follow.
 
-<span style="background-color:yellow">*Insert mapping.html table here*</span>
+<!-- include "mapping.html" snippet=table --><!-- end include -->
 
 Cursor members shown with defaults are only required if the default is not appropriate.
 
