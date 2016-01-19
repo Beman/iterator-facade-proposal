@@ -15,7 +15,7 @@ digraph iterator_concepts
   cursor [label="Cursor<C>\nrequires {typename difference_type_t<C>;}" shape=box]
   bidirectional [label="Bidirectional<C>" shape=box]
   forward [label="Forward<C>\n!single_pass<C>::value" shape=box]
-  indirectmove [label="IndirectMove<C>\nrequires(const C& c)\n{{c.indirect_move()}->auto&&;}" shape=box]
+  indirectmove [label="IndirectMove<C>\nrequires(const C& c)\n{{c.indirect_move()}\n->auto&&;}" shape=box]
   indirectswap [label="IndirectSwap<C1, C2>\nrequires\n(const C1& c1,\nconst C2& c2)\n{c1.indirect_swap(c2);\nc2.indirect_swap(c1);}" shape=box]
   input [label="Input<C>" shape=box]
   next [label="Next<C>\nrequires(C& c)\n{c.next();}" shape=box]
