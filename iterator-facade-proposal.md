@@ -22,7 +22,7 @@
 
 <span style="background-color:yellow">*TODO List*</span>
 
-* ```basic_iterator``` constructors need descriptions.
+* ```basic_iterator``` iter_move, iter_swap need descriptions.
 * Need descriptions of the types supplied by ```using assoc_t = detail::iterator_associated_types_base<C>;```. Need to use weasel wording like "appropriate to the iterator category", etc. to avoid leaking implementation details or other over-specification.
 * Need beginning to end review of ```basic_iterator``` function descriptions against the current cmcstl2 codebase.
 * Need motivating examples.
@@ -528,7 +528,7 @@ inline namespace v1 {
     using difference_type = cursor::difference_type_t<C>;
   public:
  
-    // constructors, assignments, and moves
+    // constructors, assignments, moves, swaps
     basic_iterator() = default;
 
     using mixin::mixin;
@@ -778,7 +778,78 @@ span style="background-color:yellow">*We wish to hide implementation details, bu
 
 ##### Constructors, assignments, and moves [basic_iterator.cons]
 
-%!{TBS}!%
+```
+template <ConvertibleTo<C> O>
+  constexpr basic_iterator(const basic_iterator<O>& that)
+    noexcept(is_nothrow_constructible<mixin, const O&>::value);
+```
+>*Effects:* Constructs an object of class ```basic_iterator```.
+
+>*Postconditions:* The state of ```*this``` is the same as ```that```.
+
+```
+template <ConvertibleTo<C> O>
+  constexpr basic_iterator(basic_iterator<O>&& that)
+    noexcept(is_nothrow_constructible<mixin, O&&>::value);
+```
+>*Effects:* Constructs an object of class ```basic_iterator```.
+
+>*Postconditions:* The state of ```*this``` is the same as the initial state of ```that```. ```that``` is in a valid but unspecified state.
+
+```
+template <ConvertibleTo<C> O>
+  constexpr basic_iterator& operator=(const basic_iterator<O>& that) &
+    noexcept(is_nothrow_assignable<C&, const O&>::value);
+```
+>*Effects:* If ```*this``` and ```that``` are not the same object, copy assigns ```that``` to ```*this```. Otherwise no effect.
+
+>*Returns:* ```*this```.
+
+>*Postconditions:* The state of ```*this``` is the same as ```that```.
+ 
+```
+template <ConvertibleTo<C> O>
+  constexpr basic_iterator& operator=(basic_iterator<O>&& that) &
+    noexcept(is_nothrow_assignable<C&, O&&>::value);
+```
+>*Effects:* Move assigns ```that``` to ```*this```.
+
+>*Returns:* ```*this```.
+
+>*Postconditions:* The state of ```*this``` is the same as the initial state of ```that```. ```that``` is left in a valid but unspecified state.
+
+```
+template <class T>
+  requires
+    !Same<decay_t<T>, basic_iterator>() &&
+    !cursor::Next<C>() &&
+    cursor::Writable<C, T>()
+  constexpr basic_iterator& operator=(T&& t) &
+    noexcept(noexcept(declval<C&>().write(static_cast<T&&>(t))));
+```
+>*Effects:* Move assigns ```t``` to ```*this```.
+
+>*Returns:* ```*this```.
+
+>*Postconditions:* The state of ```*this``` is the same as the initial state of ```t```. ```t``` is left in a valid but unspecified state.
+
+```
+friend constexpr decltype(auto) iter_move(const basic_iterator& i)
+    noexcept(noexcept(i.get().indirect_move()))
+  requires cursor::IndirectMove<C>();
+```
+
+<span style="background-color:yellow">*Help needed!*</span>
+
+```
+template <class O>
+  requires cursor::IndirectSwap<C, O>()
+friend constexpr void iter_swap(
+  const basic_iterator& x, const basic_iterator<O>& y)
+    noexcept(noexcept((void)x.indirect_swap(y));
+```
+
+<span style="background-color:yellow">*Help needed!*</span>
 
 ##### Dereferences [basic_iterator.deref]
 
