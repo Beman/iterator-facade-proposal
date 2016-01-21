@@ -96,7 +96,21 @@ Class template ```basic_iterator``` is an iterator adaptor that iterates over a 
 
 [*Example:*
 
- *TBS*
+ <pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator --><!-- end include --></pre>
+
+When executed, the output is:
+
+><pre>
+now 3
+is 2
+the 3
+time 4
+when 4
+all 3
+good 4
+programmers 11
+should 6
+party 5</pre>
  
  *-- end example*]
  
@@ -584,7 +598,7 @@ inline namespace v1 {
       noexcept(noexcept(declval<const C&>().arrow()))
         requires cursor::Arrow<C>();
     // operator->: Otherwise, if reference_t is an lvalue reference,
-    constexpr auto operator->() const //  Otherwise, if reference_t is an lvalue reference
+    constexpr auto operator->() const
       noexcept(noexcept(*declval<const basic_iterator&>()))
         requires cursor::Readable<C>() && !cursor::Arrow<C>()
           && is_lvalue_reference<const_reference_t>::value;
@@ -700,7 +714,8 @@ inline namespace v1 {
     requires cursor::SizedSentinel<C1, C2>()
   constexpr cursor::difference_type_t<C2> operator-(
       const basic_iterator<C1>& lhs, const basic_iterator<C2>& rhs)
-     noexcept(noexcept(ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
+    noexcept(noexcept(
+      ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
   template <class C, class S>
     requires cursor::SizedSentinel<S, C>()
   constexpr difference_type_t<C> operator-(

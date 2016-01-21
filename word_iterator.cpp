@@ -10,41 +10,46 @@
 #include <cassert>
 #include <stl2/detail/iterator/basic_iterator.hpp>
 
-namespace stl2 = __stl2;
+using namespace std::experimental;
 
+// <!-- snippet=word_iterator -->
 class cursor
 {
-  const std::string* str_;        // nullptr if uninitialized
-  std::string::size_type begin_;  // end iterator: begin_ == std::string::npos
-  std::string::size_type end_;    // half open
-  std::string word_;
+  using string = std::string;
+  const string* str_;        // nullptr if uninitialized
+  string::size_type begin_;  // end iterator: begin_ == string::npos
+  string::size_type end_;    // half open
+  string word_;
  public:
   cursor() noexcept
-    : str_(nullptr), begin_(std::string::npos), word_() {}
-  cursor(const std::string& str)
+    : str_(nullptr), begin_(string::npos), word_() {}
+  cursor(const string& str)
     : str_(&str), begin_(0), end_(0) { next(); }
-  const std::string& read() const noexcept { return word_; }
-  bool equal(const cursor& rhs) const noexcept { return begin_ == rhs.begin_; }
+  const string& read() const noexcept
+    { return word_; }
+  bool equal(const cursor& rhs) const noexcept
+    { return begin_ == rhs.begin_; }
   void next() {
     static const char* alpha =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    assert(str_);                        // fails if uninitialized
-    assert(begin_ != std::string::npos); // fails on increment past end
-    if ((begin_ = end_) != std::string::npos) {
-      if ((begin_ = str_->find_first_of(alpha, begin_)) == std::string::npos)
-        return;
-      end_ = str_->find_first_not_of(alpha, begin_);
-      word_.assign(*str_, begin_, end_ - begin_);
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on increment past end
+    if ((begin_ = end_) != string::npos) {
+      if ((begin_ = str_->find_first_of(alpha, begin_)) != string::npos) {
+        end_ = str_->find_first_not_of(alpha, begin_);
+        word_.assign(*str_, begin_, end_ - begin_);
+      }
     }
   }
 };
 
-int main(int argc, char * argv[])
+int main()
 {
-  using iterator = stl2::basic_iterator<cursor>;
-
-  std::string s("now is the time  when\nall good people should-party");
+  std::string s
+    ("now is 2016 the  time   when\nall good programmers should-party");
+  using iterator = ranges::basic_iterator<cursor>;
 
   for (iterator it(s); it != iterator(); ++it)
-    std::cout << *it << std::endl;
+    std::cout << *it << ' ' << it->size() << std::endl;
 }
+// <!-- end snippet -->

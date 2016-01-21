@@ -56,23 +56,23 @@
 &nbsp;&nbsp;&nbsp;<a href="#use-cursor-mixins-to-supply-details">Use Cursor mixins to supply details</a><br>
 <a href="#proposed-wording">Proposed wording</a><br>
 &nbsp;&nbsp;&nbsp;<a href="#basic-iterators-iterators.basic">24.8.9  Basic Iterators </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cursors-cursor.intro">24.8.9.1  Cursors </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#namespace-cursor-synopsis-cursor.synopsis">24.8.9.2  Namespace cursor synopsis </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cursor-traits-cursor.traits">24.8.9.3  Cursor traits </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#single_pass-cursor.single">24.8.9.3.1  <code>single_pass</code> </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#contiguous-cursor.contig">24.8.9.3.2  <code>contiguous</code> </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#types-cursor.types">24.8.9.3.3  Types </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#concepts-cursor.concepts">24.8.9.4  Concepts </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#class-template-basic_mixin-iterator.mixin">24.8.9.1  Class template <code>basic_mixin</code> </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#constructors-mixin.cons">24.8.9.1.1  Constructors </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#t-object-access-mixin.access">24.8.9.1.2  <code>T</code> object access </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#class-template-basic_iterator-iterator.basic_iterator">24.8.9.2  Class template <code>basic_iterator</code> </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis-basic_iterator.synopsis">24.8.9.2.1  Synopsis </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#requirements-basic_iterator.require">24.8.9.2.2  Requirements </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#constructors-assignments-and-moves-basic_iterator.cons">24.8.9.2.3  Constructors, assignments, and moves </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#dereferences-basic_iterator.deref">24.8.9.2.4  Dereferences </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#modifiers-basic_iterator.mods">24.8.9.2.5  Modifiers </a><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.2.6  <code>basic_iterator</code> nonmember functions </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cursors-cursor.intro">24.8.9.1  Cursors </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#namespace-cursor-synopsis-cursor.synopsis">24.8.9.1.1  Namespace cursor synopsis </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cursor-traits-cursor.traits">24.8.9.1.2  Cursor traits </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#single_pass-cursor.single">24.8.9.1.2.1  <code>single_pass</code> </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#contiguous-cursor.contig">24.8.9.1.2.2  <code>contiguous</code> </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#types-cursor.types">24.8.9.1.2.3  Types </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#concepts-cursor.concepts">24.8.9.1.3  Concepts </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#class-template-basic_mixin-iterator.mixin">24.8.9.2  Class template <code>basic_mixin</code> </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#constructors-mixin.cons">24.8.9.2.1  Constructors </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#t-object-access-mixin.access">24.8.9.2.2  <code>T</code> object access </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#class-template-basic_iterator-iterator.basic_iterator">24.8.9.3  Class template <code>basic_iterator</code> </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#synopsis-basic_iterator.synopsis">24.8.9.3.1  Synopsis </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#requirements-basic_iterator.require">24.8.9.3.2  Requirements </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#dereferences-basic_iterator.deref">24.8.9.3.4  Dereferences </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#modifiers-basic_iterator.mods">24.8.9.3.5  Modifiers </a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.3.6  <code>basic_iterator</code> nonmember functions </a><br>
 <a href="#open-questions">Open questions</a><br>
 <a href="#acknowledgements">Acknowledgements</a><br>
 <a href="#references">References</a><br><!-- end include -->
@@ -104,7 +104,59 @@
 <h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
 <p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>] Cursors are implementation details of a <code>basic_iterator</code> instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.</p>
 <p>[<em>Example:</em></p>
-<p><em>TBS</em></p>
+<p><pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator -->class cursor
+{
+  using string = std::string;
+  const string* str_;        // nullptr if uninitialized
+  string::size_type begin_;  // end iterator: begin_ == string::npos
+  string::size_type end_;    // half open
+  string word_;
+ public:
+  cursor() noexcept
+    : str_(nullptr), begin_(string::npos), word_() {}
+  cursor(const string&amp; str)
+    : str_(&amp;str), begin_(0), end_(0) { next(); }
+  const string&amp; read() const noexcept
+    { return word_; }
+  bool equal(const cursor&amp; rhs) const noexcept
+    { return begin_ == rhs.begin_; }
+  void next() {
+    static const char* alpha =
+    &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;;
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on increment past end
+    if ((begin_ = end_) != string::npos) {
+      if ((begin_ = str_-&gt;find_first_of(alpha, begin_)) != string::npos) {
+        end_ = str_-&gt;find_first_not_of(alpha, begin_);
+        word_.assign(*str_, begin_, end_ - begin_);
+      }
+    }
+  }
+};
+
+int main()
+{
+  std::string s
+    (&quot;now is 2016 the  time   when\nall good programmers should-party&quot;);
+  using iterator = ranges::basic_iterator&lt;cursor&gt;;
+
+  for (iterator it(s); it != iterator(); ++it)
+    std::cout &lt;&lt; *it &lt;&lt; ' ' &lt;&lt; it-&gt;size() &lt;&lt; std::endl;
+}<!-- end include --></pre></p>
+<p>When executed, the output is:</p>
+<blockquote>
+<pre>
+now 3
+is 2
+the 3
+time 4
+when 4
+all 3
+good 4
+programmers 11
+should 6
+party 5</pre>
+</blockquote>
 <p><em>-- end example</em>]</p>
 <p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>. If a cursor does not define a nested mixin type, a default mixin type will be provided.</p>
 <blockquote>
@@ -116,7 +168,7 @@
 <li><a href="#iterator-mixin">Class template <code>basic_mixin</code></a> describes mixin types.</li>
 <li><a href="#basic_iterator">Class template <code>basic_iterator</code></a> describes <code>basic_iterator</code>.</li>
 </ul>
-<h5 id="cursors-cursor.intro">24.8.9.1  Cursors [cursor.intro]</h5>
+<h4 id="cursors-cursor.intro">24.8.9.1  Cursors [cursor.intro]</h4>
 <p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
 <p>Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table. The table is informational; the actual requirements are given by the concept descriptions that follow.</p>
 <!-- include "mapping.html" snippet=table --><table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
@@ -215,7 +267,7 @@
 <p>Cursor members shown with defaults are only required if the default is not appropriate.</p>
 <p><span style="background-color:yellow"><em>Possibly insert Cursor Concepts graph here?</em></span></p>
 <p><img src="cursor-concepts.png" alt="Oops!" style="width:100%;"></p>
-<h5 id="namespace-cursor-synopsis-cursor.synopsis">24.8.9.2  Namespace cursor synopsis [cursor.synopsis]</h5>
+<h5 id="namespace-cursor-synopsis-cursor.synopsis">24.8.9.1.1  Namespace cursor synopsis [cursor.synopsis]</h5>
 <pre><code>namespace std {
 namespace experimental {
 namespace ranges {
@@ -305,8 +357,8 @@ inline namespace v1 {
     template &lt;class C&gt;
       concept bool Contiguous();
 }}}}}</code></pre>
-<h5 id="cursor-traits-cursor.traits">24.8.9.3  Cursor traits [cursor.traits]</h5>
-<h6 id="single_pass-cursor.single">24.8.9.3.1  <code>single_pass</code> [cursor.single]</h6>
+<h5 id="cursor-traits-cursor.traits">24.8.9.1.2  Cursor traits [cursor.traits]</h5>
+<h6 id="single_pass-cursor.single">24.8.9.1.2.1  <code>single_pass</code> [cursor.single]</h6>
 <pre><code>template &lt;class&gt; constexpr bool single_pass = false;
 template &lt;class C&gt;
   requires requires {
@@ -315,7 +367,7 @@ template &lt;class C&gt;
   }
 constexpr bool single_pass = true;</code></pre>
 <p><code>using single_pass = stl::true_type;</code> is defined by a cursor to specify to <code>basic_iterator</code> that the cursor does not satisfy the <code>cursor::ForwardIterator</code> concept despited satisfying the <code>cursor::InputIterator</code> and <code>cursor::EqualityComparable</code> concepts.</p>
-<h6 id="contiguous-cursor.contig">24.8.9.3.2  <code>contiguous</code> [cursor.contig]</h6>
+<h6 id="contiguous-cursor.contig">24.8.9.1.2.2  <code>contiguous</code> [cursor.contig]</h6>
 <pre><code>template &lt;class&gt; constexpr bool contiguous = false;
 template &lt;class C&gt;
   requires requires {
@@ -324,7 +376,7 @@ template &lt;class C&gt;
   }
 constexpr bool contiguous = true;</code></pre>
 <p><code>using contiguous = stl::true_type;</code> is defined by a cursor to specify to <code>basic_iterator</code> that the cursor satisfies the <code>cursor::Contiguous</code> concept if it also satisfies the <code>cursor::RandomAccess</code> concept.</p>
-<h6 id="types-cursor.types">24.8.9.3.3  Types [cursor.types]</h6>
+<h6 id="types-cursor.types">24.8.9.1.2.3  Types [cursor.types]</h6>
 <p>These type traits are used in cursor concepts, traits, and in class basic_iterator to access types defined by cursors or deduced from the presence of cursor functions.</p>
 <pre><code>template &lt;class C&gt;
   using mixin_t = <em>see below</em>;  // used by concepts, etc</code></pre>
@@ -353,7 +405,7 @@ constexpr bool contiguous = true;</code></pre>
     requires(const C&amp; c) {{c.read()} -&gt; auto&amp;&amp;;}
   using reference_t = <em>see below</em>;  // used by traits, etc.</code></pre>
 <p>Type <code>reference_t</code> is defined as <code>decltype(declval&lt;const C&amp;&gt;().read())</code>.</p>
-<h5 id="concepts-cursor.concepts">24.8.9.4  Concepts [cursor.concepts]</h5>
+<h5 id="concepts-cursor.concepts">24.8.9.1.3  Concepts [cursor.concepts]</h5>
 <pre><code>template &lt;class C&gt;
   concept bool Cursor();</code></pre>
 <blockquote>
@@ -461,7 +513,7 @@ concept bool IndirectSwap();</code></pre>
   template &lt;Destructible T&gt;
   class basic_mixin;</code></pre>
 <p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
-<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.1  Class template <code>basic_mixin</code> [iterator.mixin]</h4>
+<h4 id="class-template-basic_mixin-iterator.mixin">24.8.9.2  Class template <code>basic_mixin</code> [iterator.mixin]</h4>
 <p>Class template <code>basic_mixin</code> describes a mixin type.</p>
 <p>Class <code>basic_mixin</code> inherits from template parameter <code>T</code> or from an implementation-supplied base class that inherits from template parameter <code>T</code>.</p>
 <p>[<em>Note:</em> Permitting an implementation-supplied base class gives an implementation latitude to perform empty base optimization if it so chooses. <em>-- end note</em>]</p>
@@ -485,7 +537,7 @@ concept bool IndirectSwap();</code></pre>
     constexpr T&amp;&amp; get() &amp;&amp; noexcept;
     constexpr const T&amp;&amp; get() const&amp;&amp; noexcept;
   };</code></pre>
-<h5 id="constructors-mixin.cons">24.8.9.1.1  Constructors [mixin.cons]</h5>
+<h5 id="constructors-mixin.cons">24.8.9.2.1  Constructors [mixin.cons]</h5>
 <pre><code>constexpr basic_mixin()
   noexcept(is_nothrow_default_constructible&lt;T&gt;::value)
   requires DefaultConstructible&lt;T&gt;();</code></pre>
@@ -513,7 +565,7 @@ concept bool IndirectSwap();</code></pre>
 <blockquote>
 <p><em>Postconditions:</em> <code>get()</code> returns a reference to a move constructed object or sub-object of type <code>T</code> with the state of <code>ranges::move(t)</code>.</p>
 </blockquote>
-<h5 id="t-object-access-mixin.access">24.8.9.1.2  <code>T</code> object access [mixin.access]</h5>
+<h5 id="t-object-access-mixin.access">24.8.9.2.2  <code>T</code> object access [mixin.access]</h5>
 <p>The <code>get</code> member functions are permitted return a reference to either an object or a sub-object. [<em>Note:</em> This allows an implementation to return a reference to either a data member of type T or <code>*this</code> respectively, depending on implementation details. -- <em>end note</em>]</p>
 <pre><code>constexpr T&amp; get() &amp; noexcept;
 constexpr const T&amp; get() const&amp; noexcept;</code></pre>
@@ -526,9 +578,9 @@ constexpr const T&amp;&amp; get() const&amp;&amp; noexcept;</code></pre>
 <p><em>Returns:</em> <code>std::move(x)</code>, where <code>x</code> is a reference to the object or sub-object of type T created when <code>*this</code> was constructed..</p>
 </blockquote>
 <p><span style="background-color:lightgrey"><em>Continue to add to Basic Iterators [iterators.basic]:</em></span></p>
-<h4 id="class-template-basic_iterator-iterator.basic_iterator">24.8.9.2  Class template <code>basic_iterator</code> [iterator.basic_iterator]</h4>
+<h4 id="class-template-basic_iterator-iterator.basic_iterator">24.8.9.3  Class template <code>basic_iterator</code> [iterator.basic_iterator]</h4>
 <p>Class template <code>basic_iterator</code> describes an iterator over a sequence. A <code>basic_iterator</code> instantiation satisfies concept <code>ranges::Iterator</code>. Which of the other iterator concepts will be satisfied is determined by which cursor concepts <span style="background-color:yellow"><em>(reference)</em></span> are satisfied by the <code>basic_iterator</code> template parameter <code>C</code>.</p>
-<h5 id="synopsis-basic_iterator.synopsis">24.8.9.2.1  Synopsis [basic_iterator.synopsis]</h5>
+<h5 id="synopsis-basic_iterator.synopsis">24.8.9.3.1  Synopsis [basic_iterator.synopsis]</h5>
 <pre><code>namespace std {
 namespace experimental {
 namespace ranges {
@@ -607,7 +659,7 @@ inline namespace v1 {
       noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
         requires cursor::Arrow&lt;C&gt;();
     // operator-&gt;: Otherwise, if reference_t is an lvalue reference,
-    constexpr auto operator-&gt;() const //  Otherwise, if reference_t is an lvalue reference
+    constexpr auto operator-&gt;() const
       noexcept(noexcept(*declval&lt;const basic_iterator&amp;&gt;()))
         requires cursor::Readable&lt;C&gt;() &amp;&amp; !cursor::Arrow&lt;C&gt;()
           &amp;&amp; is_lvalue_reference&lt;const_reference_t&gt;::value;
@@ -723,7 +775,8 @@ inline namespace v1 {
     requires cursor::SizedSentinel&lt;C1, C2&gt;()
   constexpr cursor::difference_type_t&lt;C2&gt; operator-(
       const basic_iterator&lt;C1&gt;&amp; lhs, const basic_iterator&lt;C2&gt;&amp; rhs)
-     noexcept(noexcept(ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
+    noexcept(noexcept(
+      ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
   template &lt;class C, class S&gt;
     requires cursor::SizedSentinel&lt;S, C&gt;()
   constexpr difference_type_t&lt;C&gt; operator-(
@@ -791,10 +844,10 @@ inline namespace v1 {
       const basic_iterator&lt;C1&gt;&amp; lhs, const basic_iterator&lt;C2&gt;&amp; rhs)
     noexcept(noexcept(lhs - rhs &gt;= 0));
 }}}}</code></pre>
-<h5 id="requirements-basic_iterator.require">24.8.9.2.2  Requirements [basic_iterator.require]</h5>
+<h5 id="requirements-basic_iterator.require">24.8.9.3.2  Requirements [basic_iterator.require]</h5>
 <p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
 <p>span style=&quot;background-color:yellow&quot;&gt;<em>We wish to hide implementation details, but it becomes a practical impossibility to describe <code>basic_iterator</code> without exposing a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></span></p>
-<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.2.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
+<h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
   constexpr basic_iterator(const basic_iterator&lt;O&gt;&amp; that)
     noexcept(is_nothrow_constructible&lt;mixin, const O&amp;&gt;::value);</code></pre>
@@ -863,7 +916,7 @@ friend constexpr void iter_swap(
   const basic_iterator&amp; x, const basic_iterator&lt;O&gt;&amp; y)
     noexcept(noexcept((void)x.indirect_swap(y));</code></pre>
 <p><span style="background-color:yellow"><em>Help needed!</em></span></p>
-<h5 id="dereferences-basic_iterator.deref">24.8.9.2.4  Dereferences [basic_iterator.deref]</h5>
+<h5 id="dereferences-basic_iterator.deref">24.8.9.3.4  Dereferences [basic_iterator.deref]</h5>
 <pre><code>constexpr decltype(auto) operator*() const
   noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
 <blockquote>
@@ -888,7 +941,7 @@ friend constexpr void iter_swap(
 <blockquote>
 <p><em>Returns:</em> <code>get().arrow()</code>.</p>
 </blockquote>
-<h5 id="modifiers-basic_iterator.mods">24.8.9.2.5  Modifiers [basic_iterator.mods]</h5>
+<h5 id="modifiers-basic_iterator.mods">24.8.9.3.5  Modifiers [basic_iterator.mods]</h5>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp; noexcept;</code></pre>
 <blockquote>
 <p><em>Effects:</em> None.</p>
@@ -1000,7 +1053,7 @@ friend constexpr void iter_swap(
 <blockquote>
 <p><em>Returns:</em> <code>*(*this + n)</code>.</p>
 </blockquote>
-<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.2.6  <code>basic_iterator</code> nonmember functions [basic_iterator.nonmem]</h5>
+<h5 id="basic_iterator-nonmember-functions-basic_iterator.nonmem">24.8.9.3.6  <code>basic_iterator</code> nonmember functions [basic_iterator.nonmem]</h5>
 <pre><code>template &lt;class C&gt;
   constexpr C&amp; get_cursor(basic_iterator&lt;C&gt;&amp; i)
     noexcept(noexcept(i.get()))</code></pre>
