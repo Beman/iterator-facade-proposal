@@ -31,7 +31,7 @@
 <!-- generate-section-numbers=false -->
 <p><span style="background-color:yellow"><em>TODO List</em></span></p>
 <ul>
-<li><code>basic_iterator</code> constructors need descriptions.</li>
+<li><code>basic_iterator</code> iter_move, iter_swap need descriptions.</li>
 <li>Need descriptions of the types supplied by <code>using assoc_t = detail::iterator_associated_types_base&lt;C&gt;;</code>. Need to use weasel wording like &quot;appropriate to the iterator category&quot;, etc. to avoid leaking implementation details or other over-specification.</li>
 <li>Need beginning to end review of <code>basic_iterator</code> function descriptions against the current cmcstl2 codebase.</li>
 <li>Need motivating examples.</li>
@@ -104,7 +104,59 @@
 <h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
 <p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>] Cursors are implementation details of a <code>basic_iterator</code> instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.</p>
 <p>[<em>Example:</em></p>
-<p><em>TBS</em></p>
+<p><pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator -->class cursor
+{
+  using string = std::string;
+  const string* str_;        // nullptr if uninitialized
+  string::size_type begin_;  // end iterator: begin_ == string::npos
+  string::size_type end_;    // half open
+  string word_;
+ public:
+  cursor() noexcept
+    : str_(nullptr), begin_(string::npos), word_() {}
+  cursor(const string&amp; str)
+    : str_(&amp;str), begin_(0), end_(0) { next(); }
+  const string&amp; read() const noexcept
+    { return word_; }
+  bool equal(const cursor&amp; rhs) const noexcept
+    { return begin_ == rhs.begin_; }
+  void next() {
+    static const char* alpha =
+    &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;;
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on increment past end
+    if ((begin_ = end_) != string::npos) {
+      if ((begin_ = str_-&gt;find_first_of(alpha, begin_)) != string::npos) {
+        end_ = str_-&gt;find_first_not_of(alpha, begin_);
+        word_.assign(*str_, begin_, end_ - begin_);
+      }
+    }
+  }
+};
+
+int main()
+{
+  std::string s
+    (&quot;now is 2016 the  time   when\nall good programmers should-party&quot;);
+  using iterator = ranges::basic_iterator&lt;cursor&gt;;
+
+  for (iterator it(s); it != iterator(); ++it)
+    std::cout &lt;&lt; *it &lt;&lt; ' ' &lt;&lt; it-&gt;size() &lt;&lt; std::endl;
+}<!-- end include --></pre></p>
+<p>When executed, the output is:</p>
+<blockquote>
+<pre>
+now 3
+is 2
+the 3
+time 4
+when 4
+all 3
+good 4
+programmers 11
+should 6
+party 5</pre>
+</blockquote>
 <p><em>-- end example</em>]</p>
 <p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>. If a cursor does not define a nested mixin type, a default mixin type will be provided.</p>
 <blockquote>
@@ -551,7 +603,7 @@ inline namespace v1 {
     using difference_type = cursor::difference_type_t&lt;C&gt;;
   public:
  
-    // constructors, assignments, and moves
+    // constructors, assignments, moves, swaps
     basic_iterator() = default;
 
     using mixin::mixin;
@@ -607,7 +659,7 @@ inline namespace v1 {
       noexcept(noexcept(declval&lt;const C&amp;&gt;().arrow()))
         requires cursor::Arrow&lt;C&gt;();
     // operator-&gt;: Otherwise, if reference_t is an lvalue reference,
-    constexpr auto operator-&gt;() const //  Otherwise, if reference_t is an lvalue reference
+    constexpr auto operator-&gt;() const
       noexcept(noexcept(*declval&lt;const basic_iterator&amp;&gt;()))
         requires cursor::Readable&lt;C&gt;() &amp;&amp; !cursor::Arrow&lt;C&gt;()
           &amp;&amp; is_lvalue_reference&lt;const_reference_t&gt;::value;
@@ -723,7 +775,8 @@ inline namespace v1 {
     requires cursor::SizedSentinel&lt;C1, C2&gt;()
   constexpr cursor::difference_type_t&lt;C2&gt; operator-(
       const basic_iterator&lt;C1&gt;&amp; lhs, const basic_iterator&lt;C2&gt;&amp; rhs)
-     noexcept(noexcept(ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
+    noexcept(noexcept(
+      ranges::get_cursor(rhs).distance_to(ranges::get_cursor(lhs))));
   template &lt;class C, class S&gt;
     requires cursor::SizedSentinel&lt;S, C&gt;()
   constexpr difference_type_t&lt;C&gt; operator-(
@@ -795,7 +848,74 @@ inline namespace v1 {
 <p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
 <p>span style=&quot;background-color:yellow&quot;&gt;<em>We wish to hide implementation details, but it becomes a practical impossibility to describe <code>basic_iterator</code> without exposing a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></span></p>
 <h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
-<p><em>TBS</em></p>
+<pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
+  constexpr basic_iterator(const basic_iterator&lt;O&gt;&amp; that)
+    noexcept(is_nothrow_constructible&lt;mixin, const O&amp;&gt;::value);</code></pre>
+<blockquote>
+<p><em>Effects:</em> Constructs an object of class <code>basic_iterator</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> The state of <code>*this</code> is the same as <code>that</code>.</p>
+</blockquote>
+<pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
+  constexpr basic_iterator(basic_iterator&lt;O&gt;&amp;&amp; that)
+    noexcept(is_nothrow_constructible&lt;mixin, O&amp;&amp;&gt;::value);</code></pre>
+<blockquote>
+<p><em>Effects:</em> Constructs an object of class <code>basic_iterator</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> The state of <code>*this</code> is the same as the initial state of <code>that</code>. <code>that</code> is in a valid but unspecified state.</p>
+</blockquote>
+<pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
+  constexpr basic_iterator&amp; operator=(const basic_iterator&lt;O&gt;&amp; that) &amp;
+    noexcept(is_nothrow_assignable&lt;C&amp;, const O&amp;&gt;::value);</code></pre>
+<blockquote>
+<p><em>Effects:</em> If <code>*this</code> and <code>that</code> are not the same object, copy assigns <code>that</code> to <code>*this</code>. Otherwise no effect.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> The state of <code>*this</code> is the same as <code>that</code>.</p>
+</blockquote>
+<pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
+  constexpr basic_iterator&amp; operator=(basic_iterator&lt;O&gt;&amp;&amp; that) &amp;
+    noexcept(is_nothrow_assignable&lt;C&amp;, O&amp;&amp;&gt;::value);</code></pre>
+<blockquote>
+<p><em>Effects:</em> Move assigns <code>that</code> to <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> The state of <code>*this</code> is the same as the initial state of <code>that</code>. <code>that</code> is left in a valid but unspecified state.</p>
+</blockquote>
+<pre><code>template &lt;class T&gt;
+  requires
+    !Same&lt;decay_t&lt;T&gt;, basic_iterator&gt;() &amp;&amp;
+    !cursor::Next&lt;C&gt;() &amp;&amp;
+    cursor::Writable&lt;C, T&gt;()
+  constexpr basic_iterator&amp; operator=(T&amp;&amp; t) &amp;
+    noexcept(noexcept(declval&lt;C&amp;&gt;().write(static_cast&lt;T&amp;&amp;&gt;(t))));</code></pre>
+<blockquote>
+<p><em>Effects:</em> Move assigns <code>t</code> to <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Returns:</em> <code>*this</code>.</p>
+</blockquote>
+<blockquote>
+<p><em>Postconditions:</em> The state of <code>*this</code> is the same as the initial state of <code>t</code>. <code>t</code> is left in a valid but unspecified state.</p>
+</blockquote>
+<pre><code>friend constexpr decltype(auto) iter_move(const basic_iterator&amp; i)
+    noexcept(noexcept(i.get().indirect_move()))
+  requires cursor::IndirectMove&lt;C&gt;();</code></pre>
+<p><span style="background-color:yellow"><em>Help needed!</em></span></p>
+<pre><code>template &lt;class O&gt;
+  requires cursor::IndirectSwap&lt;C, O&gt;()
+friend constexpr void iter_swap(
+  const basic_iterator&amp; x, const basic_iterator&lt;O&gt;&amp; y)
+    noexcept(noexcept((void)x.indirect_swap(y));</code></pre>
+<p><span style="background-color:yellow"><em>Help needed!</em></span></p>
 <h5 id="dereferences-basic_iterator.deref">24.8.9.3.4  Dereferences [basic_iterator.deref]</h5>
 <pre><code>constexpr decltype(auto) operator*() const
   noexcept(noexcept(declval&lt;const C&amp;&gt;().read()));</code></pre>
