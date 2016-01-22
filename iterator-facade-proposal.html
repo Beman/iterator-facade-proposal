@@ -109,53 +109,53 @@
   using string = std::string;
   const string* str_;        // nullptr if uninitialized
   string::size_type begin_;  // end iterator: begin_ == string::npos
-  string::size_type end_;    // half open
   string word_;
+  static constexpr const char* alpha =
+    &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;;
  public:
   cursor() noexcept
     : str_(nullptr), begin_(string::npos), word_() {}
   cursor(const string&amp; str)
-    : str_(&amp;str), begin_(0), end_(0) { next(); }
-  const string&amp; read() const noexcept
-    { return word_; }
+    : str_(&amp;str), begin_(0), word_() { next(); }
+  const string&amp; read() const noexcept {
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on dereference end
+    return word_;
+  }
   bool equal(const cursor&amp; rhs) const noexcept
     { return begin_ == rhs.begin_; }
   void next() {
-    static const char* alpha =
-    &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;;
     assert(str_);                    // fails if uninitialized
     assert(begin_ != string::npos);  // fails on increment past end
-    if ((begin_ = end_) != string::npos) {
-      if ((begin_ = str_-&gt;find_first_of(alpha, begin_)) != string::npos) {
-        end_ = str_-&gt;find_first_not_of(alpha, begin_);
-        word_.assign(*str_, begin_, end_ - begin_);
-      }
-    }
+    if ((begin_ += word_.size()) != string::npos
+        &amp;&amp; (begin_ = str_-&gt;find_first_of(alpha, begin_)) != string::npos)
+      word_.assign(*str_, begin_,
+        str_-&gt;find_first_not_of(alpha, begin_) - begin_);
   }
 };
 
 int main()
 {
   std::string s
-    (&quot;now is 2016 the  time   when\nall good programmers should-party&quot;);
+    (&quot;now is 2016 the  time   when\nall good programmers should-party.&quot;);
   using iterator = ranges::basic_iterator&lt;cursor&gt;;
 
   for (iterator it(s); it != iterator(); ++it)
-    std::cout &lt;&lt; *it &lt;&lt; ' ' &lt;&lt; it-&gt;size() &lt;&lt; std::endl;
+    std::cout &lt;&lt; *it &lt;&lt; &quot; (&quot; &lt;&lt; it-&gt;size() &lt;&lt; &quot;)\n&quot;;
 }<!-- end include --></pre></p>
 <p>When executed, the output is:</p>
 <blockquote>
 <pre>
-now 3
-is 2
-the 3
-time 4
-when 4
-all 3
-good 4
-programmers 11
-should 6
-party 5</pre>
+now (3)
+is (2)
+the (3)
+time (4)
+when (4)
+all (3)
+good (4)
+programmers (11)
+should (6)
+party (5)</pre>
 </blockquote>
 <p><em>-- end example</em>]</p>
 <p>A cursor <code>C</code> may extend the interface of <code>basic_iterator&lt;C&gt;</code> by defining a nested mixin type <code>C::mixin</code>. In that way, the author of a cursor can non-intrusively add members and constructors to <code>basic_iterator</code>. If a cursor does not define a nested mixin type, a default mixin type will be provided.</p>
