@@ -18,38 +18,38 @@ class cursor
   using string = std::string;
   const string* str_;        // nullptr if uninitialized
   string::size_type begin_;  // end iterator: begin_ == string::npos
-  string::size_type end_;    // half open
   string word_;
+  static constexpr const char* alpha =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
  public:
   cursor() noexcept
     : str_(nullptr), begin_(string::npos), word_() {}
   cursor(const string& str)
-    : str_(&str), begin_(0), end_(0) { next(); }
-  const string& read() const noexcept
-    { return word_; }
+    : str_(&str), begin_(0), word_() { next(); }
+  const string& read() const noexcept {
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on dereference end
+    return word_;
+  }
   bool equal(const cursor& rhs) const noexcept
     { return begin_ == rhs.begin_; }
   void next() {
-    static const char* alpha =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     assert(str_);                    // fails if uninitialized
     assert(begin_ != string::npos);  // fails on increment past end
-    if ((begin_ = end_) != string::npos) {
-      if ((begin_ = str_->find_first_of(alpha, begin_)) != string::npos) {
-        end_ = str_->find_first_not_of(alpha, begin_);
-        word_.assign(*str_, begin_, end_ - begin_);
-      }
-    }
+    if ((begin_ += word_.size()) != string::npos
+        && (begin_ = str_->find_first_of(alpha, begin_)) != string::npos)
+      word_.assign(*str_, begin_,
+        str_->find_first_not_of(alpha, begin_) - begin_);
   }
 };
 
 int main()
 {
   std::string s
-    ("now is 2016 the  time   when\nall good programmers should-party");
+    ("now is 2016 the  time   when\nall good programmers should-party.");
   using iterator = ranges::basic_iterator<cursor>;
 
   for (iterator it(s); it != iterator(); ++it)
-    std::cout << *it << ' ' << it->size() << std::endl;
+    std::cout << *it << " (" << it->size() << ")\n";
 }
 // <!-- end snippet -->

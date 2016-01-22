@@ -101,16 +101,16 @@ Class template ```basic_iterator``` is an iterator adaptor that iterates over a 
 When executed, the output is:
 
 ><pre>
-now 3
-is 2
-the 3
-time 4
-when 4
-all 3
-good 4
-programmers 11
-should 6
-party 5</pre>
+now (3)
+is (2)
+the (3)
+time (4)
+when (4)
+all (3)
+good (4)
+programmers (11)
+should (6)
+party (5)</pre>
  
  *-- end example*]
  
