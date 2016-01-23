@@ -889,11 +889,14 @@ using mixin::get;</code></pre>
 </blockquote>
 <pre><code>using typename assoc_t::postfix_increment_result_t;</code></pre>
 <blockquote>
-<p><em>Remarks:</em> If <code>cursor::Next&lt;C&gt;</code> is satisfied, shall satisfy the requirements imposed by <a href="#op-pos-inc"><code>operator++(int)</code> below</a> and concept <code>WeaklyIncrementable&lt;basic_iterator&lt;C&gt;&gt;</code> (RangesTS[iterators.weaklyincrementable]).</p>
+<p><em>Remarks:</em> If <code>cursor::Next&lt;C&gt;</code> is satisfied, <code>postfix_increment_result_t</code> shall satisfy the requirements imposed by <a href="#op-pos-inc"><code>operator++(int)</code> below</a> and concept <code>WeaklyIncrementable&lt;basic_iterator&lt;C&gt;&gt;</code> (RangesTS[iterators.weaklyincrementable]). If <code>cursor::Next&lt;C&gt;</code> is not satisfied, <code>postfix_increment_result_t</code> has no requirements.</p>
 </blockquote>
 <pre><code>using typename assoc_t::reference_t;</code></pre>
+<p><span style="background-color:yellow"><em>TBS</em></span></p>
 <pre><code>using typename assoc_t::const_reference_t;</code></pre>
+<p><span style="background-color:yellow"><em>TBS</em></span></p>
 <pre><code>using difference_type = cursor::difference_type_t&lt;C&gt;;</code></pre>
+<p><span style="background-color:yellow"><em>TBS</em></span></p>
 <h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
   constexpr basic_iterator(const basic_iterator&lt;O&gt;&amp; that)
