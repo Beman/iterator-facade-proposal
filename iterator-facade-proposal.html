@@ -297,7 +297,7 @@ party (5)</pre>
   </tr>
   </table><!-- end include -->
 <p>Cursor members shown with defaults are only required if the default is not appropriate.</p>
-<p>The following figure shows the relationship between cursor related concepts. The table is informational; actual relationships are specified by the concepts descriptions that follow.</p>
+<p>The following figure shows the relationship between cursor related concepts. The figure is informational; actual relationships are specified by the concepts descriptions that follow.</p>
 <p><img src="cursor-concepts.png" alt="Oops!" style="width:100%;"></p>
 <h5 id="namespace-cursor-synopsis-cursor.synopsis">24.8.9.1.1  Namespace cursor synopsis [cursor.synopsis]</h5>
 <pre><code>namespace std {
@@ -893,7 +893,7 @@ using mixin::get;</code></pre>
 </blockquote>
 <pre><code>using typename assoc_t::reference_t;</code></pre>
 <pre><code>using typename assoc_t::const_reference_t;</code></pre>
-<pre><code>    using difference_type = cursor::difference_type_t&lt;C&gt;;</code></pre>
+<pre><code>using difference_type = cursor::difference_type_t&lt;C&gt;;</code></pre>
 <h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
   constexpr basic_iterator(const basic_iterator&lt;O&gt;&amp; that)

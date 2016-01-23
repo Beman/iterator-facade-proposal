@@ -139,7 +139,7 @@ Which cursor concepts are satisfied by a user-supplied cursor type is determined
 
 Cursor members shown with defaults are only required if the default is not appropriate.
 
-The following figure shows the relationship between cursor related concepts. The table is informational; actual relationships are specified by the concepts descriptions that follow.
+The following figure shows the relationship between cursor related concepts. The figure is informational; actual relationships are specified by the concepts descriptions that follow.
 
 <img src="cursor-concepts.png" alt="Oops!" style="width:100%;"> 
 
