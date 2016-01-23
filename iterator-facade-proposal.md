@@ -5,7 +5,7 @@
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left"><span style="background-color:yellow">2016-01-13</span></td>
+  <td align="left"><span style="background-color:yellow">2016-01-22</span></td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -23,10 +23,8 @@
 <span style="background-color:yellow">*TODO List*</span>
 
 * ```basic_iterator``` iter_move, iter_swap need descriptions.
-* Need descriptions of the types supplied by ```using assoc_t = detail::iterator_associated_types_base<C>;```. Need to use weasel wording like "appropriate to the iterator category", etc. to avoid leaking implementation details or other over-specification.
-* Need beginning to end review of ```basic_iterator``` function descriptions against the current cmcstl2 codebase.
-* Need motivating examples.
-
+* 24.8.9.3.2 Requirements [basic_iterator.require] Needs more work
+* Need review of ```basic_iterator``` function descriptions against the current cmcstl2 codebase.
 
 # Iterator Facade Library Proposal for Ranges
 
@@ -60,9 +58,13 @@ The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherw
 
 A 2004 proposal<sup>&lsqb;[7](#7)&rsqb;</sup> based on Boost ```iterator_facade``` failed because it depended on an iterator update proposal<sup>&lsqb;[8](#8)&rsqb;</sup> that failed because without concepts the language was not rich enough to express the necessary iterator requirements.
 
-## Examples
+## Example
 
-*TBS*
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator --><!-- end include --></pre>
+
+The five member functions in class ```cursor``` result in generation of approximately eleven class ```word_iterator``` functions, as well supply in several useful iterator type-traits. 
+
+For a sample program that uses ```word_iterator```, [see Basic Iterators, below](#basic-iterators-iterators.basic).
 
 ## Design Decisions
 
@@ -86,17 +88,21 @@ Cursor mixins have proven themselves useful time and again. That said, it's a cu
 
 <span style="background-color:lightgrey">*Proposed wording is relative to the Working Draft, C++ Extensions for Ranges*</span>
 
-<span style="background-color:lightgrey">*Throughout this proposed wording, namespace qualification in the form ```ranges::``` is used as a placeholder pending a decision as to the final target for this proposal. If the target is the Ranges TS, ```ranges::``` will be replaced editorially by ```std::experimental::ranges::```. If the target is the standard itself, ```ranges::``` will be replaced by ```std::```, assuming the standard library itself does not introduce namespace versioning.*</span>
+<span style="background-color:lightgrey">*Namespace qualification in the form ```ranges::``` is used as a placeholder pending a decision as to the final target for this proposal. If the target is the Ranges TS, ```ranges::``` will be replaced editorially by ```std::experimental::ranges::```. If the target is the standard itself, ```ranges::``` will be replaced by ```std::```, assuming the standard library itself does not introduce namespace versioning.*</span>
 
 <span style="background-color:lightgrey">*Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:*</span>
 
 ### Basic Iterators [iterators.basic]
 
-Class template ```basic_iterator``` is an iterator adaptor that iterates over a sequence provided by a cursor type.  [*Note:* ```basic_iterator``` eases creation of conforming iterators because cursors are simpler to create than iterators. *-- end note*] Cursors are implementation details of a  ```basic_iterator``` instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.
+Class template ```basic_iterator``` ([iterator.basic_iterator](#class-template-basic_iterator-iterator.basic_iterator)) is an iterator adaptor that iterates over a sequence provided by a cursor type.  [*Note:* ```basic_iterator``` eases creation of conforming iterators because cursors are simpler to create than iterators. *-- end note*] Cursors are implementation details of a  ```basic_iterator``` instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.
 
 [*Example:*
 
- <pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator --><!-- end include --></pre>
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator --><!-- end include --></pre>
+
+Program using ```word_iterator```:
+
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator_use --><!-- end include --></pre>
 
 When executed, the output is:
 
@@ -127,13 +133,13 @@ party (5)</pre>
 
 Namespace ```cursor``` provides a scope for the type traits, concepts, and other traits needed to describe cursor types.
 
-Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table.  The table is informational; the actual requirements are given by the concept descriptions that follow.
+Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table.  The table is informational; actual requirements are specified by the concept descriptions that follow.
 
 <!-- include "mapping.html" snippet=table --><!-- end include -->
 
 Cursor members shown with defaults are only required if the default is not appropriate.
 
-<span style="background-color:yellow">*Possibly insert Cursor Concepts graph here?*</span>
+The following figure shows the relationship between cursor related concepts. The table is informational; actual relationships are specified by the concepts descriptions that follow.
 
 <img src="cursor-concepts.png" alt="Oops!" style="width:100%;"> 
 
@@ -787,9 +793,37 @@ inline namespace v1 {
 
 ##### Requirements [basic_iterator.require]
 
-Private members of class ```basic_iterator``` are for exposition only (17.5.2.3 Private members [objects.within.classes]).
+Private members of class ```basic_iterator``` are for exposition only (C++17 17.5.2.3 Private members [objects.within.classes]). 
 
-span style="background-color:yellow">*We wish to hide implementation details, but it becomes a practical impossibility to describe ```basic_iterator``` without exposing a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private "exposition only" members.*</span>
+```
+using mixin = mixin_t<C>;
+using mixin::get;
+```
+
+>*Remarks:* Provides access to the ```get``` functions described in [mixin object access [mixin.object]](#t-object-access-mixin.access).
+
+```
+using assoc_t = %!{see below}!%;
+```
+>*Remarks:* ```assoc_t``` is an alias for an unspecified type containing several implementation-supplied types.
+
+```
+using typename assoc_t::postfix_increment_result_t;
+```
+>*Remarks:* If ```cursor::Next<C>``` is satisfied, shall satisfy the requirements imposed by [```operator++(int)``` below](#op-pos-inc) and concept ```WeaklyIncrementable<basic_iterator<C>>``` (RangesTS[iterators.weaklyincrementable]). 
+```
+using typename assoc_t::reference_t;
+```
+
+
+```
+using typename assoc_t::const_reference_t;
+```
+
+
+```
+using difference_type = cursor::difference_type_t<C>;
+```
 
 ##### Constructors, assignments, and moves [basic_iterator.cons]
 
@@ -904,7 +938,7 @@ constexpr basic_iterator& operator++() & noexcept;
 
 >*Returns:* ```*this```.
 
->[*Note:* This overload is only selected if the follow overload is not selected. *-- end note*]
+>[*Note:* This overload is only selected if the following overload is not selected. *-- end note*]
 
 ```
 constexpr basic_iterator& operator++() &
@@ -922,8 +956,9 @@ constexpr basic_iterator& operator++(int) & noexcept;
 
 >*Returns:* ```*this```.
 
->[*Note:* This overload is only selected if the follow overload is not selected. *-- end note*]
+>[*Note:* This overload is only selected if the following overload is not selected. *-- end note*]
 
+<a name="op-pos-inc"></a>
 ```
 constexpr postfix_increment_result_t operator++(int) &
   noexcept(is_nothrow_constructible<postfix_increment_result_t,

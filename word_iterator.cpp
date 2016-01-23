@@ -43,13 +43,16 @@ class cursor
   }
 };
 
+using word_iterator = ranges::basic_iterator<cursor>;
+// <!-- end snippet -->
+
+// <!-- snippet=word_iterator_use -->
 int main()
 {
   std::string s
     ("now is 2016 the  time   when\nall good programmers should-party.");
-  using iterator = ranges::basic_iterator<cursor>;
 
-  for (iterator it(s); it != iterator(); ++it)
+  for (word_iterator it(s); it != word_iterator(); ++it)
     std::cout << *it << " (" << it->size() << ")\n";
 }
 // <!-- end snippet -->

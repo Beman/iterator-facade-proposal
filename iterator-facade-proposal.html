@@ -16,7 +16,7 @@
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left"><span style="background-color:yellow">2016-01-13</span></td>
+  <td align="left"><span style="background-color:yellow">2016-01-22</span></td>
 </tr>
 <tr>
   <td align="left">Project:</td>
@@ -32,9 +32,8 @@
 <p><span style="background-color:yellow"><em>TODO List</em></span></p>
 <ul>
 <li><code>basic_iterator</code> iter_move, iter_swap need descriptions.</li>
-<li>Need descriptions of the types supplied by <code>using assoc_t = detail::iterator_associated_types_base&lt;C&gt;;</code>. Need to use weasel wording like &quot;appropriate to the iterator category&quot;, etc. to avoid leaking implementation details or other over-specification.</li>
-<li>Need beginning to end review of <code>basic_iterator</code> function descriptions against the current cmcstl2 codebase.</li>
-<li>Need motivating examples.</li>
+<li>24.8.9.3.2 Requirements [basic_iterator.require] Needs more work</li>
+<li>Need review of <code>basic_iterator</code> function descriptions against the current cmcstl2 codebase.</li>
 </ul>
 <h1 id="iterator-facade-library-proposal-for-ranges">Iterator Facade Library Proposal for Ranges</h1>
 <p><em>&quot;We are what we pretend to be, so we must be careful about what we pretend to be.&quot; - Kurt Vonnegut</em></p>
@@ -49,7 +48,7 @@
 &nbsp;&nbsp;&nbsp;<a href="#solution">Solution</a><br>
 &nbsp;&nbsp;&nbsp;<a href="#proposal">Proposal</a><br>
 &nbsp;&nbsp;&nbsp;<a href="#history">History</a><br>
-<a href="#examples">Examples</a><br>
+<a href="#example">Example</a><br>
 <a href="#design-decisions">Design Decisions</a><br>
 &nbsp;&nbsp;&nbsp;<a href="#use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</a><br>
 &nbsp;&nbsp;&nbsp;<a href="#base-design-on-concepts-and-ranges">Base design on Concepts and Ranges</a><br>
@@ -86,25 +85,8 @@
 <p>The proposal is suitable for C++17 if C++17 includes concepts and ranges. Otherwise, the proposal is suitable for the Ranges TS. No other core language or library changes are required.</p>
 <h3 id="history">History</h3>
 <p>A 2004 proposal<sup>[<a href="#7">7</a>]</sup> based on Boost <code>iterator_facade</code> failed because it depended on an iterator update proposal<sup>[<a href="#8">8</a>]</sup> that failed because without concepts the language was not rich enough to express the necessary iterator requirements.</p>
-<h2 id="examples">Examples</h2>
-<p><em>TBS</em></p>
-<h2 id="design-decisions">Design Decisions</h2>
-<h3 id="use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</h3>
-<p>This ensures that the proposal represents existing practice in widespread use.</p>
-<h3 id="base-design-on-concepts-and-ranges">Base design on Concepts and Ranges</h3>
-<p>This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows a concepts based interface specification that ensures the resulting iterator is actually conforming. It improves error message quality when the user makes a mistake. Using concepts based overloading eliminates the need for the implementation to perform complex template meta-programming.</p>
-<h3 id="use-cursor-mixins-to-supply-details">Use Cursor mixins to supply details</h3>
-<p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
-<h2 id="proposed-wording">Proposed wording</h2>
-<!-- generate-section-numbers -->
-<p><span style="background-color:lightgrey"><em>Editorial comments are shown in italics with a light grey background.</em></span></p>
-<p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
-<p><span style="background-color:lightgrey"><em>Throughout this proposed wording, namespace qualification in the form <code>ranges::</code> is used as a placeholder pending a decision as to the final target for this proposal. If the target is the Ranges TS, <code>ranges::</code> will be replaced editorially by <code>std::experimental::ranges::</code>. If the target is the standard itself, <code>ranges::</code> will be replaced by <code>std::</code>, assuming the standard library itself does not introduce namespace versioning.</em></span></p>
-<p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
-<h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
-<p>Class template <code>basic_iterator</code> is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>] Cursors are implementation details of a <code>basic_iterator</code> instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.</p>
-<p>[<em>Example:</em></p>
-<p><pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator -->class cursor
+<h2 id="example">Example</h2>
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator -->class cursor
 {
   using string = std::string;
   const string* str_;        // nullptr if uninitialized
@@ -134,15 +116,65 @@
   }
 };
 
-int main()
+using word_iterator = ranges::basic_iterator&lt;cursor&gt;;<!-- end include --></pre>
+<p>The five member functions in class <code>cursor</code> result in generation of approximately eleven class <code>word_iterator</code> functions, as well supply in several useful iterator type-traits.</p>
+<p>For a sample program that uses <code>word_iterator</code>, <a href="#basic-iterators-iterators.basic">see Basic Iterators, below</a>.</p>
+<h2 id="design-decisions">Design Decisions</h2>
+<h3 id="use-boost-iterator_facade-as-a-role-model">Use Boost <code>iterator_facade</code> as a role model</h3>
+<p>This ensures that the proposal represents existing practice in widespread use.</p>
+<h3 id="base-design-on-concepts-and-ranges">Base design on Concepts and Ranges</h3>
+<p>This eliminates the difficulties with specification that bedeviled the 2004 proposal. It allows a concepts based interface specification that ensures the resulting iterator is actually conforming. It improves error message quality when the user makes a mistake. Using concepts based overloading eliminates the need for the implementation to perform complex template meta-programming.</p>
+<h3 id="use-cursor-mixins-to-supply-details">Use Cursor mixins to supply details</h3>
+<p>Cursor mixins have proven themselves useful time and again. That said, it's a curiously indirect way of defining an iterator's interface. The alternative of inheriting directly from the Cursor leads to interface pollution. Cursors are implementation details and they should stay hidden.</p>
+<h2 id="proposed-wording">Proposed wording</h2>
+<!-- generate-section-numbers -->
+<p><span style="background-color:lightgrey"><em>Editorial comments are shown in italics with a light grey background.</em></span></p>
+<p><span style="background-color:lightgrey"><em>Proposed wording is relative to the Working Draft, C++ Extensions for Ranges</em></span></p>
+<p><span style="background-color:lightgrey"><em>Namespace qualification in the form <code>ranges::</code> is used as a placeholder pending a decision as to the final target for this proposal. If the target is the Ranges TS, <code>ranges::</code> will be replaced editorially by <code>std::experimental::ranges::</code>. If the target is the standard itself, <code>ranges::</code> will be replaced by <code>std::</code>, assuming the standard library itself does not introduce namespace versioning.</em></span></p>
+<p><span style="background-color:lightgrey"><em>Add the following proposed wording as a new Iterator adapter at the end of 24.8 Iterator adaptors [iterators.predef]:</em></span></p>
+<h3 id="basic-iterators-iterators.basic">24.8.9  Basic Iterators [iterators.basic]</h3>
+<p>Class template <code>basic_iterator</code> (<a href="#class-template-basic_iterator-iterator.basic_iterator">iterator.basic_iterator</a>) is an iterator adaptor that iterates over a sequence provided by a cursor type. [<em>Note:</em> <code>basic_iterator</code> eases creation of conforming iterators because cursors are simpler to create than iterators. <em>-- end note</em>] Cursors are implementation details of a <code>basic_iterator</code> instantiation that are encapsulated as mixins so that they are hidden from users of the instantiation.</p>
+<p>[<em>Example:</em></p>
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator -->class cursor
+{
+  using string = std::string;
+  const string* str_;        // nullptr if uninitialized
+  string::size_type begin_;  // end iterator: begin_ == string::npos
+  string word_;
+  static constexpr const char* alpha =
+    &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;;
+ public:
+  cursor() noexcept
+    : str_(nullptr), begin_(string::npos), word_() {}
+  cursor(const string&amp; str)
+    : str_(&amp;str), begin_(0), word_() { next(); }
+  const string&amp; read() const noexcept {
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on dereference end
+    return word_;
+  }
+  bool equal(const cursor&amp; rhs) const noexcept
+    { return begin_ == rhs.begin_; }
+  void next() {
+    assert(str_);                    // fails if uninitialized
+    assert(begin_ != string::npos);  // fails on increment past end
+    if ((begin_ += word_.size()) != string::npos
+        &amp;&amp; (begin_ = str_-&gt;find_first_of(alpha, begin_)) != string::npos)
+      word_.assign(*str_, begin_,
+        str_-&gt;find_first_not_of(alpha, begin_) - begin_);
+  }
+};
+
+using word_iterator = ranges::basic_iterator&lt;cursor&gt;;<!-- end include --></pre>
+<p>Program using <code>word_iterator</code>:</p>
+<pre><!-- include "word_iterator.cpp" formatted snippet=word_iterator_use -->int main()
 {
   std::string s
     (&quot;now is 2016 the  time   when\nall good programmers should-party.&quot;);
-  using iterator = ranges::basic_iterator&lt;cursor&gt;;
 
-  for (iterator it(s); it != iterator(); ++it)
+  for (word_iterator it(s); it != word_iterator(); ++it)
     std::cout &lt;&lt; *it &lt;&lt; &quot; (&quot; &lt;&lt; it-&gt;size() &lt;&lt; &quot;)\n&quot;;
-}<!-- end include --></pre></p>
+}<!-- end include --></pre>
 <p>When executed, the output is:</p>
 <blockquote>
 <pre>
@@ -170,7 +202,7 @@ party (5)</pre>
 </ul>
 <h4 id="cursors-cursor.intro">24.8.9.1  Cursors [cursor.intro]</h4>
 <p>Namespace <code>cursor</code> provides a scope for the type traits, concepts, and other traits needed to describe cursor types.</p>
-<p>Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table. The table is informational; the actual requirements are given by the concept descriptions that follow.</p>
+<p>Which cursor concepts are satisfied by a user-supplied cursor type is determined by its members. The relationship between a cursor type's member, the cursor concept that requires it, and a summary of the cursor concept's requirement for the member are shown by the following table. The table is informational; actual requirements are specified by the concept descriptions that follow.</p>
 <!-- include "mapping.html" snippet=table --><table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
   <tr>
     <td align="center"><b><i>Member<br>
@@ -265,7 +297,7 @@ party (5)</pre>
   </tr>
   </table><!-- end include -->
 <p>Cursor members shown with defaults are only required if the default is not appropriate.</p>
-<p><span style="background-color:yellow"><em>Possibly insert Cursor Concepts graph here?</em></span></p>
+<p>The following figure shows the relationship between cursor related concepts. The table is informational; actual relationships are specified by the concepts descriptions that follow.</p>
 <p><img src="cursor-concepts.png" alt="Oops!" style="width:100%;"></p>
 <h5 id="namespace-cursor-synopsis-cursor.synopsis">24.8.9.1.1  Namespace cursor synopsis [cursor.synopsis]</h5>
 <pre><code>namespace std {
@@ -845,8 +877,23 @@ inline namespace v1 {
     noexcept(noexcept(lhs - rhs &gt;= 0));
 }}}}</code></pre>
 <h5 id="requirements-basic_iterator.require">24.8.9.3.2  Requirements [basic_iterator.require]</h5>
-<p>Private members of class <code>basic_iterator</code> are for exposition only (17.5.2.3 Private members [objects.within.classes]).</p>
-<p>span style=&quot;background-color:yellow&quot;&gt;<em>We wish to hide implementation details, but it becomes a practical impossibility to describe <code>basic_iterator</code> without exposing a few implementation types and functions. These conflicting needs are resolved by supplying the types and functions as private &quot;exposition only&quot; members.</em></span></p>
+<p>Private members of class <code>basic_iterator</code> are for exposition only (C++17 17.5.2.3 Private members [objects.within.classes]).</p>
+<pre><code>using mixin = mixin_t&lt;C&gt;;
+using mixin::get;</code></pre>
+<blockquote>
+<p><em>Remarks:</em> Provides access to the <code>get</code> functions described in <a href="#t-object-access-mixin.access">mixin object access [mixin.object]</a>.</p>
+</blockquote>
+<pre><code>using assoc_t = <em>see below</em>;</code></pre>
+<blockquote>
+<p><em>Remarks:</em> <code>assoc_t</code> is an alias for an unspecified type containing several implementation-supplied types.</p>
+</blockquote>
+<pre><code>using typename assoc_t::postfix_increment_result_t;</code></pre>
+<blockquote>
+<p><em>Remarks:</em> If <code>cursor::Next&lt;C&gt;</code> is satisfied, shall satisfy the requirements imposed by <a href="#op-pos-inc"><code>operator++(int)</code> below</a> and concept <code>WeaklyIncrementable&lt;basic_iterator&lt;C&gt;&gt;</code> (RangesTS[iterators.weaklyincrementable]).</p>
+</blockquote>
+<pre><code>using typename assoc_t::reference_t;</code></pre>
+<pre><code>using typename assoc_t::const_reference_t;</code></pre>
+<pre><code>    using difference_type = cursor::difference_type_t&lt;C&gt;;</code></pre>
 <h5 id="constructors-assignments-and-moves-basic_iterator.cons">24.8.9.3.3  Constructors, assignments, and moves [basic_iterator.cons]</h5>
 <pre><code>template &lt;ConvertibleTo&lt;C&gt; O&gt;
   constexpr basic_iterator(const basic_iterator&lt;O&gt;&amp; that)
@@ -950,7 +997,7 @@ friend constexpr void iter_swap(
 <p><em>Returns:</em> <code>*this</code>.</p>
 </blockquote>
 <blockquote>
-<p>[<em>Note:</em> This overload is only selected if the follow overload is not selected. <em>-- end note</em>]</p>
+<p>[<em>Note:</em> This overload is only selected if the following overload is not selected. <em>-- end note</em>]</p>
 </blockquote>
 <pre><code>constexpr basic_iterator&amp; operator++() &amp;
   noexcept(noexcept(declval&lt;C&amp;&gt;().next()))
@@ -969,8 +1016,9 @@ friend constexpr void iter_swap(
 <p><em>Returns:</em> <code>*this</code>.</p>
 </blockquote>
 <blockquote>
-<p>[<em>Note:</em> This overload is only selected if the follow overload is not selected. <em>-- end note</em>]</p>
+<p>[<em>Note:</em> This overload is only selected if the following overload is not selected. <em>-- end note</em>]</p>
 </blockquote>
+<p><a name="op-pos-inc"></a></p>
 <pre><code>constexpr postfix_increment_result_t operator++(int) &amp;
   noexcept(is_nothrow_constructible&lt;postfix_increment_result_t,
     basic_iterator&amp;&gt;::value
