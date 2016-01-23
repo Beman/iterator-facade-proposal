@@ -799,7 +799,6 @@ Private members of class ```basic_iterator``` are for exposition only (C++17 17.
 using mixin = mixin_t<C>;
 using mixin::get;
 ```
-
 >*Remarks:* Provides access to the ```get``` functions described in [mixin object access [mixin.object]](#t-object-access-mixin.access).
 
 ```
@@ -810,20 +809,28 @@ using assoc_t = %!{see below}!%;
 ```
 using typename assoc_t::postfix_increment_result_t;
 ```
->*Remarks:* If ```cursor::Next<C>``` is satisfied, shall satisfy the requirements imposed by [```operator++(int)``` below](#op-pos-inc) and concept ```WeaklyIncrementable<basic_iterator<C>>``` (RangesTS[iterators.weaklyincrementable]). 
+>*Remarks:* If ```cursor::Next<C>``` is satisfied, ```postfix_increment_result_t``` shall satisfy the requirements imposed by [```operator++(int)``` below](#op-pos-inc) and concept ```WeaklyIncrementable<basic_iterator<C>>``` (RangesTS[iterators.weaklyincrementable]). If ```cursor::Next<C>``` is not satisfied, ```postfix_increment_result_t``` has no requirements.
+ 
 ```
 using typename assoc_t::reference_t;
 ```
+
+<span style="background-color:yellow">*TBS*</span>
 
 
 ```
 using typename assoc_t::const_reference_t;
 ```
 
+<span style="background-color:yellow">*TBS*</span>
+
 
 ```
 using difference_type = cursor::difference_type_t<C>;
 ```
+
+<span style="background-color:yellow">*TBS*</span>
+
 
 ##### Constructors, assignments, and moves [basic_iterator.cons]
 
