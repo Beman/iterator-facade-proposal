@@ -1,5 +1,6 @@
 @echo off
 copy /y styles.css gh-pages
+copy /y cursor-concepts.png gh-pages
 copy /y iterator-facade-proposal.html gh-pages
 cd gh-pages
 git commit -a --message="%date%"
