@@ -1,8 +1,9 @@
 digraph iterator_concepts
 {
-  size ="14,14"
-  ratio=compress
-  concentrate=true
+  size ="14,14";
+  ratio=compress;
+  concentrate=true;
+  ranksep=1.0;
   graph [fontname = "courier" fontsize = 18.0];
   node [fontname = "courier" fontsize = 18.0];
   edge [fontname = "courier" fontsize = 18.0];
