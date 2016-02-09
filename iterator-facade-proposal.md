@@ -5,17 +5,17 @@
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left"><span style="background-color:yellow">2016-01-22</span></td>
-</tr>
-<tr>
-  <td align="left">Project:</td>
-  <td align="left">To be decided</td>
+  <td align="left"><span style="background-color:yellow">2016-02-09</span></td>
 </tr>
 <tr>
   <td align="left" valign="top">Reply to:</td>
   <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;</br>
   Eric Niebler &lt;eric dot niebler at gmail dot com&gt;</br>
   Casey Carter &lt;casey at carter dot net&gt;</td></tr>
+<tr>
+  <td align="left">Audience:</td>
+  <td align="left">Library Evolution</td>
+</tr>
 </table>
 
 <!-- generate-section-numbers=false -->
