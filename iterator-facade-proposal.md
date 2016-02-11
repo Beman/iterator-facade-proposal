@@ -1,7 +1,7 @@
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">P0186R0</span></td>
+  <td align="left"><span style="background-color:yellow">D0186R1</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
@@ -20,7 +20,7 @@
 
 <!-- generate-section-numbers=false -->
 
-# Iterator Facade Library Proposal for Ranges
+# Iterator Facade Library Proposal for Ranges (R1)
 
 *"We are what we pretend to be, so we must be careful about what we pretend to be." - Kurt Vonnegut*
 
