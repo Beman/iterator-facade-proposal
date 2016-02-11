@@ -1,11 +1,11 @@
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">D0186R0</span></td>
+  <td align="left"><span style="background-color:yellow">P0186R0</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
-  <td align="left"><span style="background-color:yellow">2016-02-09</span></td>
+  <td align="left">2016-02-11</td>
 </tr>
 <tr>
   <td align="left" valign="top">Reply to:</td>
@@ -19,12 +19,6 @@
 </table>
 
 <!-- generate-section-numbers=false -->
-
-<span style="background-color:yellow">*TODO List*</span>
-
-* ```basic_iterator``` iter_move, iter_swap need descriptions.
-* 24.8.9.3.2 Requirements [basic_iterator.require] Needs more work
-* Need review of ```basic_iterator``` function descriptions against the current cmcstl2 codebase.
 
 # Iterator Facade Library Proposal for Ranges
 
@@ -815,21 +809,21 @@ using typename assoc_t::postfix_increment_result_t;
 using typename assoc_t::reference_t;
 ```
 
-<span style="background-color:yellow">*TBS*</span>
+<span style="background-color:lightgrey">*TBS*</span>
 
 
 ```
 using typename assoc_t::const_reference_t;
 ```
 
-<span style="background-color:yellow">*TBS*</span>
+<span style="background-color:lightgrey">*TBS*</span>
 
 
 ```
 using difference_type = cursor::difference_type_t<C>;
 ```
 
-<span style="background-color:yellow">*TBS*</span>
+<span style="background-color:lightgrey">*TBS*</span>
 
 
 ##### Constructors, assignments, and moves [basic_iterator.cons]
@@ -895,7 +889,7 @@ friend constexpr decltype(auto) iter_move(const basic_iterator& i)
   requires cursor::IndirectMove<C>();
 ```
 
-<span style="background-color:yellow">*Help needed!*</span>
+<span style="background-color:lightgrey">*TBS*</span>
 
 ```
 template <class O>
@@ -905,7 +899,7 @@ friend constexpr void iter_swap(
     noexcept(noexcept((void)x.indirect_swap(y));
 ```
 
-<span style="background-color:yellow">*Help needed!*</span>
+<span style="background-color:lightgrey">*TBS*</span>
 
 ##### Dereferences [basic_iterator.deref]
 
@@ -1206,7 +1200,9 @@ constexpr bool operator>=(
 
 ## Acknowledgements
 
-*TBS*
+Thanks to David Abrahams, Jeremy Siek, and Thomas Witt for Boost ```iterator_facade```. Having such a strong role model greatly enriched this proposal.
+
+Thanks to the folks who implemented the Concepts TS for GCC 6.0. Their development snapshots are what allowed this proposal to be implemented and tested.
 
 ## References
 [1]: https://www.boost.org/doc/libs/1_59_0/libs/iterator/doc/iterator_facade.html
